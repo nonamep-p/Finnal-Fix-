@@ -1,0 +1,897 @@
+import discord
+from discord.ext import commands
+from discord import app_commands
+import random
+import asyncio
+from datetime import datetime, timedelta
+from typing import Optional, Dict, Any, List
+import logging
+
+# Import necessary utilities and constants
+from config import COLORS, EMOJIS, get_server_config, is_module_enabled
+from utils.helpers import create_embed, format_number, calculate_level_xp, create_progress_bar, format_duration
+from utils.database import get_user_rpg_data, update_user_rpg_data, ensure_user_exists
+from utils.constants import PLAYER_CLASSES, WEAPONS, ARMOR, RPG_CONSTANTS, CONSUMABLES
+
+logger = logging.getLogger(__name__)
+
+# --- Player Data Structure & Database Integration ---
+
+def create_default_player_data(user_id: str, username: str, player_class: str = None) -> Dict[str, Any]:
+    """
+    Creates a new default player data structure.
+    Applies base stats and initial equipment based on selected class.
+    """
+    # Base stats for a new character before class bonuses
+    base_stats = {
+        "strength": 10,
+        "dexterity": 10,
+        "constitution": 10,
+        "intelligence": 10,
+        "wisdom": 10,
+        "charisma": 10,
+    }
+
+    # Default HP, Mana, Stamina before class selection
+    base_hp = 100
+    base_mana = 50
+    base_stamina = 100
+
+    # Apply class-specific base stats and bonuses if a class is provided
+    if player_class and player_class in PLAYER_CLASSES:
+        class_data = PLAYER_CLASSES[player_class]
+        base_hp = class_data['base_stats']['hp']
+        base_mana = class_data['base_stats']['mana']
+        base_stamina = class_data['base_stats']['stamina']
+
+        # Apply class-specific stat bonuses
+        # These are added on top of the initial 10 for each stat
+        if player_class == 'warrior':
+            base_stats["strength"] += 5
+            base_stats["constitution"] += 3
+        elif player_class == 'mage':
+            base_stats["intelligence"] += 5
+            base_stats["wisdom"] += 3
+        elif player_class == 'rogue':
+            base_stats["dexterity"] += 5
+            base_stats["charisma"] += 3
+        elif player_class == 'archer':
+            base_stats["dexterity"] += 4
+            base_stats["wisdom"] += 2
+        elif player_class == 'healer':
+            base_stats["wisdom"] += 5
+            base_stats["constitution"] += 3
+        # No specific stat bonuses for Chrono Weave here, as it's hidden and complex
+
+    return {
+        'user_id': user_id,
+        'username': username,
+        'hp': base_hp,
+        'max_hp': base_hp,
+        'mana': base_mana,
+        'max_mana': base_mana,
+        'stamina': base_stamina,
+        'max_stamina': base_stamina,
+        'xp': 0,
+        'level': 1,
+        'gold': 100, # Starting gold
+        'player_class': player_class, # Set the chosen class
+        'stats': base_stats,
+        'inventory': ['Health Potion', 'Cheese Knife'], # Starting items
+        'equipped_items': {
+            'weapon': 'Cheese Knife', # Start with a basic weapon
+            'helmet': None,
+            'chestplate': None,
+            'leggings': None,
+            'boots': None,
+            'accessory': None
+        },
+        'quests': {
+            'active': [],
+            'completed': []
+        },
+        'current_dungeon': None, # Tracks if player is currently in a dungeon
+        'dungeon_floor': 0, # Current floor in a dungeon
+        'combat_state': {
+            'in_combat': False,
+            'enemy_hp': 0,
+            'enemy_max_hp': 0,
+            'enemy_name': None,
+            'turn_order': [],
+            'current_turn': 0,
+            'message_id': None # To store the combat embed message ID for editing
+        },
+        'status_effects': {}, # Dictionary to store active status effects (e.g., {'poisoned': {'duration': 300, 'applied_at': 'ISO_TIME'}})
+        'creation_date': datetime.now().isoformat(),
+        'last_active': datetime.now().isoformat(),
+        'achievements': [],
+        'cooldowns': { # Track cooldowns for various actions
+            'adventure': 0,
+            'work': 0,
+            'daily': 0,
+            'battle': 0,
+            'skill_cooldowns': {} # Specific skill cooldowns
+        },
+        'prestige_level': 0, # For endgame progression
+        'legacy_modifiers': [], # For permanent bonuses from prestige
+        'luck_points': 0 # Starting luck points
+    }
+
+# Data loading and saving functions are already in utils/database.py
+# We will use get_user_rpg_data and update_user_rpg_data from there.
+
+# --- Class Selection View ---
+
+class ClassSelectionView(discord.ui.View):
+    """
+    Interactive view for players to select their starting class.
+    """
+    def __init__(self, user_id: str):
+        super().__init__(timeout=300) # Timeout after 5 minutes
+        self.user_id = user_id
+        self.add_class_buttons()
+
+    def add_class_buttons(self):
+        """Dynamically adds buttons for each selectable class."""
+        # Only show non-hidden classes for initial selection
+        selectable_classes = {k: v for k, v in PLAYER_CLASSES.items() if k != 'chrono_weave'}
+
+        for class_key, class_data in selectable_classes.items():
+            button = discord.ui.Button(
+                label=class_data['name'],
+                style=discord.ButtonStyle.primary, # Can customize style per class
+                custom_id=f"class_select_{class_key}" # Unique custom ID for interaction
+            )
+            # Assign the callback directly as an async method
+            async def button_callback(interaction: discord.Interaction, selected_class=class_key):
+                await self.handle_class_selection(interaction, selected_class)
+            
+            button.callback = button_callback
+            self.add_item(button)
+
+    async def handle_class_selection(self, interaction: discord.Interaction, class_key: str):
+        """Handle class selection for character creation."""
+        # Ensure only the original user can interact with their own character creation
+        if str(interaction.user.id) != self.user_id:
+            await interaction.response.send_message("❌ This isn't your character creation!", ephemeral=True)
+            return
+
+        # Check if player already has a class selected (prevent double creation)
+        player_data = get_user_rpg_data(self.user_id)
+        if player_data and player_data.get('player_class'):
+            await interaction.response.edit_message(
+                embed=create_embed("⚠️ Already Chosen", "You've already selected a class!", COLORS['warning']),
+                view=None # Remove buttons
+            )
+            self.stop() # Stop the view
+            return
+
+        # Create new player data with the selected class
+        new_player_data = create_default_player_data(self.user_id, interaction.user.display_name, class_key)
+
+        # Save to database
+        if update_user_rpg_data(self.user_id, new_player_data):
+            class_info = PLAYER_CLASSES[class_key]
+
+            embed = create_embed(
+                "🎉 Character Created Successfully!",
+                f"Welcome, **{class_info['name']}**!\n\n{class_info['description']}",
+                COLORS['success']
+            )
+
+            embed.add_field(
+                name="📊 Starting Stats",
+                value=(f"**HP:** {new_player_data['max_hp']}\n"
+                       f"**Mana:** {new_player_data['max_mana']}\n"
+                       f"**Stamina:** {new_player_data['max_stamina']}\n"
+                       f"**Gold:** {new_player_data['gold']} {EMOJIS['coins']}"),
+                inline=True
+            )
+
+            embed.add_field(
+                name="🎒 Starting Equipment",
+                value="• Health Potion\n• Cheese Knife", # Reflects default_player_data
+                inline=True
+            )
+
+            embed.add_field(
+                name="🚀 Next Steps",
+                value="• Use `/profile` to view your character\n• Use `$adventure` to start exploring\n• Use `$help` for all RPG commands",
+                inline=False
+            )
+
+            # Disable all buttons after selection and remove Chrono Weave placeholder
+            for item in self.children:
+                item.disabled = True
+            self.stop() # Stop the view
+
+            await interaction.response.edit_message(embed=embed, view=self)
+            logger.info(f"User {interaction.user.id} created character as {class_key}.")
+        else:
+            await interaction.response.send_message("❌ Failed to create character. Please try again.", ephemeral=True)
+            logger.error(f"Failed to save player data for {interaction.user.id} during character creation.")
+
+
+# --- Profile View for Interactive Pages ---
+
+class ProfileView(discord.ui.View):
+    """
+    Interactive profile view with multiple pages for different character information.
+    """
+    def __init__(self, user_id: str, username: str, bot_instance: commands.Bot): # Added bot_instance
+        super().__init__(timeout=300)
+        self.user_id = user_id
+        self.username = username
+        self.bot = bot_instance # Store bot instance
+        self.current_page = "main" # Default page
+
+    # Buttons for navigation
+    @discord.ui.button(label="📊 Main Stats", style=discord.ButtonStyle.primary, row=0)
+    async def main_stats_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if str(interaction.user.id) != self.user_id:
+            await interaction.response.send_message("❌ This isn't your profile!", ephemeral=True)
+            return
+        self.current_page = "main"
+        embed = await self._create_current_page_embed()
+        await interaction.response.edit_message(embed=embed, view=self)
+
+    @discord.ui.button(label="🎒 Inventory", style=discord.ButtonStyle.secondary, row=0)
+    async def inventory_page_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if str(interaction.user.id) != self.user_id:
+            await interaction.response.send_message("❌ This isn't your profile!", ephemeral=True)
+            return
+        self.current_page = "inventory"
+        embed = await self._create_current_page_embed()
+        await interaction.response.edit_message(embed=embed, view=self)
+
+    @discord.ui.button(label="⚔️ Equipment", style=discord.ButtonStyle.success, row=0)
+    async def equipment_page_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if str(interaction.user.id) != self.user_id:
+            await interaction.response.send_message("❌ This isn't your profile!", ephemeral=True)
+            return
+        self.current_page = "equipment"
+        embed = await self._create_current_page_embed()
+        await interaction.response.edit_message(embed=embed, view=self)
+
+    @discord.ui.button(label="🏆 Achievements", style=discord.ButtonStyle.secondary, row=1)
+    async def achievements_page_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if str(interaction.user.id) != self.user_id:
+            await interaction.response.send_message("❌ This isn't your profile!", ephemeral=True)
+            return
+        self.current_page = "achievements"
+        embed = await self._create_current_page_embed()
+        await interaction.response.edit_message(embed=embed, view=self)
+
+    @discord.ui.button(label="🆘 Request Owner Assistance", style=discord.ButtonStyle.danger, row=1)
+    async def request_assistance_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """
+        Placeholder for owner assistance. Will be implemented in Part 8.
+        """
+        if str(interaction.user.id) != self.user_id:
+            await interaction.response.send_message("❌ This isn't your profile!", ephemeral=True)
+            return
+        
+        await interaction.response.send_message(
+            f"🔧 **Owner Assistance System**\n\nYour request has been noted. Please DM the owner (NoNameP_P, Discord ID: 1297013439125917766) directly with your Discord User ID ({self.user_id}) for further assistance. They will be notified of your request.",
+            ephemeral=True
+        )
+        # In a real bot, you'd also log this or send a private message to the owner.
+        logger.info(f"User {self.user_id} requested owner assistance via profile view.")
+
+
+    async def _create_current_page_embed(self) -> discord.Embed:
+        """Helper to create the embed for the currently selected page."""
+        if self.current_page == "main":
+            return await self._create_main_embed()
+        elif self.current_page == "inventory":
+            return await self._create_inventory_embed()
+        elif self.current_page == "equipment":
+            return await self._create_equipment_embed()
+        elif self.current_page == "achievements":
+            return await self._create_achievements_embed()
+        # Fallback
+        return create_embed("Error", "Could not load profile page.", COLORS['error'])
+
+    # Reverted to async def as discord.py often expects await even for synchronous-looking data access
+    async def _get_player_data(self) -> Dict[str, Any]:
+        """Helper to get current player data from the database."""
+        # Await the synchronous call in an async context to avoid blocking the event loop
+        return await asyncio.to_thread(get_user_rpg_data, self.user_id) or {}
+
+    async def _create_main_embed(self) -> discord.Embed:
+        """Creates the embed for the main stats page."""
+        player_data = await self._get_player_data() # Await this call
+
+        if not player_data:
+            return create_embed("❌ Error", "Player data not found!", COLORS['error'])
+
+        level = player_data.get('level', 1)
+        xp = player_data.get('xp', 0)
+        xp_needed, progress = calculate_level_xp(level + 1), 0 # Initialize progress
+        
+        # Calculate XP progress safely
+        if xp_needed > 0:
+            progress = min((xp / xp_needed) * 100, 100)
+        else: # Max level or error case
+            progress = 100 
+
+
+        embed = discord.Embed(
+            title=f"👤 {self.username}'s Profile",
+            description=f"**Class:** {PLAYER_CLASSES.get(player_data.get('player_class', 'warrior'), {}).get('name', 'Unknown')}\n**Level:** {level}",
+            color=COLORS['primary']
+        )
+        # Fetch user avatar dynamically
+        user_avatar_url = ""
+        try:
+            # self.bot is now guaranteed to be available
+            user_obj = await self.bot.fetch_user(int(self.user_id))
+            user_avatar_url = user_obj.display_avatar.url
+        except Exception as e:
+            logger.warning(f"Could not fetch avatar for user {self.user_id}: {e}")
+        
+        if user_avatar_url:
+            embed.set_thumbnail(url=user_avatar_url)
+
+        # XP Progress
+        embed.add_field(
+            name="📈 Experience",
+            value=f"**XP:** {format_number(xp)}/{format_number(xp_needed)} ({progress:.1f}%)\n{create_progress_bar(progress)}",
+            inline=False
+        )
+
+        # Health, Mana, Stamina
+        hp = player_data.get('hp', 0)
+        max_hp = player_data.get('max_hp', 100)
+        mana = player_data.get('mana', 0)
+        max_mana = player_data.get('max_mana', 50)
+        stamina = player_data.get('stamina', 0)
+        max_stamina = player_data.get('max_stamina', 100)
+
+        embed.add_field(
+            name="💚 Vitals",
+            value=(f"**HP:** {hp}/{max_hp} {EMOJIS['hp']}\n"
+                   f"**Mana:** {mana}/{max_mana} {EMOJIS['mana']}\n"
+                   f"**Stamina:** {stamina}/{max_stamina} {EMOJIS['stamina']}"),
+            inline=True
+        )
+
+        # Core Stats
+        stats = player_data.get('stats', {})
+        embed.add_field(
+            name="📊 Core Stats",
+            value=(f"**STR:** {stats.get('strength', 10)}\n"
+                   f"**DEX:** {stats.get('dexterity', 10)}\n"
+                   f"**CON:** {stats.get('constitution', 10)}\n"
+                   f"**INT:** {stats.get('intelligence', 10)}\n"
+                   f"**WIS:** {stats.get('wisdom', 10)}\n"
+                   f"**CHA:** {stats.get('charisma', 10)}"),
+            inline=True
+        )
+
+        # Gold
+        embed.add_field(
+            name="💰 Currency",
+            value=f"**Gold:** {format_number(player_data.get('gold', 0))} {EMOJIS['coins']}",
+            inline=True
+        )
+        
+        # Current Status Effects
+        active_effects = player_data.get('status_effects', {})
+        if active_effects:
+            effect_lines = []
+            for effect_name, effect_data in active_effects.items():
+                # Assuming STATUS_EFFECTS contains emoji and name for each effect
+                effect_info = RPG_CONSTANTS['STATUS_EFFECTS'].get(effect_name) # Corrected access
+                if effect_info:
+                    emoji = effect_info.get('emoji', '')
+                    name = effect_info.get('name', effect_name.replace('_', ' ').title())
+                    # Calculate remaining duration
+                    applied_time = datetime.fromisoformat(effect_data['applied_at'])
+                    duration_seconds = effect_info.get('duration_seconds', 0) # Use duration_seconds from constants
+                    time_left = (applied_time + timedelta(seconds=duration_seconds)) - datetime.now()
+                    duration_text = f" ({format_duration(int(time_left.total_seconds()))} left)" if time_left.total_seconds() > 0 else ""
+                    
+                    effect_lines.append(f"{emoji} {name}{duration_text}")
+            if effect_lines:
+                embed.add_field(
+                    name="✨ Active Effects",
+                    value="\n".join(effect_lines),
+                    inline=False
+                )
+
+
+        return embed
+
+    async def _create_inventory_embed(self) -> discord.Embed:
+        """Creates the embed for the inventory page."""
+        player_data = await self._get_player_data() # Await this call
+        inventory = player_data.get('inventory', [])
+
+        embed = discord.Embed(
+            title=f"🎒 {self.username}'s Inventory",
+            color=COLORS['secondary']
+        )
+
+        if inventory:
+            item_counts = {}
+            for item_name in inventory:
+                item_counts[item_name] = item_counts.get(item_name, 0) + 1
+
+            inventory_text = ""
+            for item_name, count in item_counts.items():
+                # Get rarity information if available
+                item_info = WEAPONS.get(item_name) or ARMOR.get(item_name) or CONSUMABLES.get(item_name)
+                
+                rarity_text = ""
+                if item_info and 'rarity' in item_info:
+                    rarity_text = f" ({item_info['rarity'].title()})"
+                
+                count_text = f" x{count}" if count > 1 else ""
+                item_display_text += f"• {item_name}{count_text}{rarity_text}\n"
+            
+            # Ensure text fits within embed field limit
+            if len(inventory_text) > 1024:
+                inventory_text = inventory_text[:1020] + "..."
+
+            embed.add_field(
+                name="📦 Items",
+                value=inventory_text or "Empty inventory", # Fallback for empty after truncation
+                inline=False
+            )
+        else:
+            embed.description = "Your inventory is empty! Go on adventures to find items."
+
+        embed.add_field(
+            name="📊 Inventory Stats",
+            value=f"**Total Items:** {len(inventory)}\n**Unique Items:** {len(set(inventory))}",
+            inline=True
+        )
+
+        return embed
+
+    async def _create_equipment_embed(self) -> discord.Embed:
+        """Creates the embed for the equipment page."""
+        player_data = await self._get_player_data() # Await this call
+        equipped = player_data.get('equipped_items', {})
+
+        embed = discord.Embed(
+            title=f"⚔️ {self.username}'s Equipment",
+            color=COLORS['warning']
+        )
+
+        equipment_text = ""
+        slots = ['weapon', 'helmet', 'chestplate', 'leggings', 'boots', 'accessory']
+        slot_emojis = {
+            'weapon': '⚔️',
+            'helmet': '🪖',
+            'chestplate': '🛡️',
+            'leggings': '👖',
+            'boots': '👢',
+            'accessory': '💍'
+        }
+
+        for slot in slots:
+            emoji = slot_emojis.get(slot, '📦')
+            item_name = equipped.get(slot, 'None')
+            
+            item_info = None
+            if item_name != 'None':
+                item_info = WEAPONS.get(item_name) or ARMOR.get(item_name)
+            
+            item_display = item_name
+            if item_info:
+                rarity_text = f" ({item_info['rarity'].title()})" if 'rarity' in item_info else ""
+                item_display = f"{item_name}{rarity_text}"
+                # Add basic stats for equipped items
+                stats_info = []
+                if 'attack' in item_info: stats_info.append(f"ATK: {item_info['attack']}")
+                if 'defense' in item_info: stats_info.append(f"DEF: {item_info['defense']}")
+                if stats_info: item_display += f" [{', '.join(stats_info)}]"
+
+            equipment_text += f"{emoji} **{slot.title()}:** {item_display}\n"
+
+        embed.add_field(
+            name="👕 Currently Equipped",
+            value=equipment_text,
+            inline=False
+        )
+        
+        # Calculate total stats from equipped items
+        total_attack = 0
+        total_defense = 0
+        # Add more stats as needed (HP, Mana, etc.)
+        
+        for slot, item_name in equipped.items():
+            if item_name and item_name != 'None':
+                item_info = WEAPONS.get(item_name) or ARMOR.get(item_name)
+                if item_info:
+                    total_attack += item_info.get('attack', 0)
+                    total_defense += item_info.get('defense', 0)
+        
+        embed.add_field(
+            name="✨ Equipment Bonuses",
+            value=f"**Total Attack Bonus:** {total_attack}\n"
+                  f"**Total Defense Bonus:** {total_defense}",
+            inline=False
+        )
+
+        return embed
+
+    async def _create_achievements_embed(self) -> discord.Embed:
+        """Creates the embed for the achievements page."""
+        player_data = await self._get_player_data() # Await this call
+        achievements = player_data.get('achievements', [])
+
+        embed = discord.Embed(
+            title=f"🏆 {self.username}'s Achievements",
+            color=COLORS['success']
+        )
+
+        if achievements:
+            achievement_text = ""
+            for achievement in achievements[:10]:  # Show max 10 achievements
+                achievement_text += f"🏆 {achievement}\n"
+            embed.add_field(
+                name="🎉 Unlocked",
+                value=achievement_text,
+                inline=False
+            )
+        else:
+            embed.description = "No achievements yet! Complete quests and adventures to earn them."
+
+        embed.add_field(
+            name="📊 Progress",
+            value=f"**Achievements:** {len(achievements)}/???\n**Completion:** {len(achievements) / 1 * 100:.1f}%", # Placeholder for total achievements
+            inline=True
+        )
+
+        return embed
+
+# --- RPG Games Cog ---
+
+class RPGGamesCog(commands.Cog):
+    """
+    RPG Games system - Part 1: Core Player & Game Setup.
+    Handles character creation, profile display, and basic data management.
+    """
+
+    def __init__(self, bot):
+        self.bot = bot
+
+    @commands.command(name='start', help='Create your RPG character')
+    @app_commands.command(name="start", description="Create your RPG character")
+    async def start_command(self, ctx: commands.Context):
+        """
+        Initiates the character creation process for a new player.
+        Checks if a profile already exists and guides the user through class selection.
+        """
+        # Check if RPG module is enabled for the guild
+        if not is_module_enabled("rpg_games", ctx.guild.id):
+            return # Bot will not respond if module is disabled
+
+        user_id = str(ctx.author.id)
+        existing_data = get_user_rpg_data(user_id)
+
+        if existing_data and existing_data.get('player_class'):
+            # If character already exists and has a class
+            embed = create_embed(
+                "⚠️ Character Already Exists",
+                f"You already have a character, {ctx.author.mention}!\n\nUse `/profile` to view your character or `$help` for available commands.",
+                COLORS['warning']
+            )
+            await ctx.send(embed=embed, ephemeral=True) # Use ephemeral for less chat spam
+            return
+        elif existing_data and not existing_data.get('player_class'):
+            # If profile exists but no class chosen (e.g., incomplete setup)
+            embed = create_embed(
+                "🎭 Continue Character Creation",
+                f"Welcome back, {ctx.author.mention}!\n\nIt looks like you started creating a character but didn't choose a class. Please select your class below to continue your adventure!",
+                COLORS['info']
+            )
+            view = ClassSelectionView(user_id)
+            await ctx.send(embed=embed, view=view, ephemeral=True)
+            return
+
+
+        # Create character creation embed for new users
+        embed = discord.Embed(
+            title="🎭 Epic RPG Character Creation",
+            description=(
+                "**Welcome to Plagg's Epic RPG Adventure!**\n\n"
+                "Choose your class below to begin your journey through Paris and beyond. "
+                "Each class has unique abilities and starting stats.\n\n"
+                "*The kwami of destruction awaits your decision...*"
+            ),
+            color=COLORS['primary']
+        )
+
+        # Add class information to the embed
+        class_descriptions = ""
+        for class_key, class_data in PLAYER_CLASSES.items():
+            if class_key == 'chrono_weave':  # Skip hidden class for initial selection
+                continue
+
+            stats = class_data['base_stats']
+            class_descriptions += (
+                f"**{class_data['name']}**\n"
+                f"*{class_data['description'][:80]}...*\n" # Truncate description for brevity
+                f"HP: {stats['hp']} | MP: {stats['mana']} | Stamina: {stats['stamina']}\n\n"
+            )
+
+        embed.add_field(
+            name="🛡️ Available Classes",
+            value=class_descriptions,
+            inline=False
+        )
+
+        embed.add_field(
+            name="🎁 Starting Package",
+            value="• 100 Gold pieces\n• Health Potion\n• Cheese Knife\n• Class-specific bonuses",
+            inline=False
+        )
+
+        embed.add_field(
+            name="🚀 Next Steps",
+            value="• Use `/profile` to view your character\n• Use `$adventure` to start exploring\n• Use `$help` for all RPG commands",
+            inline=False
+        )
+
+        embed.set_footer(text="💡 Click a class button below to create your character!")
+
+        view = ClassSelectionView(user_id)
+        await ctx.send(embed=embed, view=view, ephemeral=True) # Use ephemeral for character creation
+
+    @app_commands.command(name="profile", description="View your character profile")
+    @app_commands.describe(member="The member whose profile you want to view (optional)")
+    async def profile_slash(self, interaction: discord.Interaction, member: Optional[discord.Member] = None):
+        """
+        Displays a user's character profile with interactive pages.
+        Supports viewing other members' profiles (static view).
+        """
+        # Check if RPG module is enabled for the guild
+        if not is_module_enabled("rpg_games", interaction.guild.id):
+            await interaction.response.send_message("❌ RPG Games module is disabled!", ephemeral=True)
+            return
+
+        target = member or interaction.user
+        user_id = str(target.id)
+        player_data = get_user_rpg_data(user_id)
+
+        if not player_data or not player_data.get('player_class'):
+            user_text = "You" if target == interaction.user else target.display_name
+            verb_text = "don't" if target == interaction.user else "doesn't"
+            embed = create_embed(
+                "❌ No Character Found",
+                f"{user_text} {verb_text} have a character yet! Use `/start` to begin your adventure.",
+                COLORS['error']
+            )
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
+
+        # Create interactive profile view only for the user's own profile
+        if target == interaction.user:
+            view = ProfileView(user_id, target.display_name, self.bot) # Pass self.bot
+            embed = await view._create_main_embed()
+            await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+        else:
+            # For other users, send a static embed (no interactive buttons)
+            # We create a temporary ProfileView to generate the embed
+            temp_view = ProfileView(user_id, target.display_name, self.bot) # Pass self.bot
+            embed = await temp_view._create_main_embed()
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+    
+    # Add a fallback for prefix commands if needed, or remove if only slash commands are desired for profile
+    @commands.command(name='profile', help='View your character profile')
+    async def profile_prefix_command(self, ctx: commands.Context, member: Optional[discord.Member] = None):
+        # This is a wrapper to call the slash command logic for prefix commands
+        # It's generally better to have one source of truth for command logic.
+        # However, for simplicity, we'll just call the slash command's logic.
+        # Note: ctx.interaction is None for prefix commands, so we need to simulate it or refactor.
+        # For now, let's just make it a simple embed without interactive view for prefix.
+
+        if not is_module_enabled("rpg_games", ctx.guild.id):
+            return
+
+        target = member or ctx.author
+        user_id = str(target.id)
+        player_data = get_user_rpg_data(user_id)
+
+        if not player_data or not player_data.get('player_class'):
+            user_text = "You" if target == ctx.author else target.display_name
+            verb_text = "don't" if target == ctx.author else "doesn't"
+            embed = create_embed(
+                "❌ No Character Found",
+                f"{user_text} {verb_text} have a character yet! Use `$start` to begin your adventure.",
+                COLORS['error']
+            )
+            await ctx.send(embed=embed)
+            return
+        
+        # For prefix command, just send the main profile embed (non-interactive)
+        temp_view = ProfileView(user_id, target.display_name, self.bot) # Pass self.bot
+        embed = await temp_view._create_main_embed()
+        await ctx.send(embed=embed)
+
+
+    @commands.command(name='reset_character', help='Reset your character (WARNING: Permanent!)')
+    @app_commands.command(name="reset_character", description="Reset your character (WARNING: Permanent!)")
+    async def reset_character_command(self, ctx: commands.Context):
+        """
+        Allows a user to permanently reset their character progress after multiple confirmations.
+        This command is available via both prefix and slash.
+        """
+        # Ensure the command is called from a Context (for prefix) or Interaction (for slash)
+        if isinstance(ctx, discord.Interaction):
+            interaction = ctx
+            user_id = str(interaction.user.id)
+            send_func = interaction.response.send_message
+            followup_func = interaction.followup.send
+            author = interaction.user
+            guild_id = interaction.guild.id
+        else:
+            user_id = str(ctx.author.id)
+            send_func = ctx.send
+            followup_func = ctx.send # For prefix, followup is just send
+            author = ctx.author
+            guild_id = ctx.guild.id
+
+
+        if not is_module_enabled("rpg_games", guild_id):
+            await send_func("❌ RPG Games module is disabled!", ephemeral=True)
+            return
+
+        player_data = get_user_rpg_data(user_id)
+
+        if not player_data or not player_data.get('player_class'):
+            embed = create_embed(
+                "❌ No Character Found",
+                "You don't have a character to reset!",
+                COLORS['error']
+            )
+            await send_func(embed=embed, ephemeral=True)
+            return
+
+        # First warning and confirmation
+        level = player_data.get('level', 1)
+        player_class = PLAYER_CLASSES.get(player_data.get('player_class', 'warrior'), {}).get('name', 'Unknown')
+
+        embed = create_embed(
+            "⚠️ **EXTREME WARNING: CHARACTER RESET**",
+            (f"You are about to **PERMANENTLY DELETE** your **Level {level} {player_class.upper()}**!\n\n"
+             "**This action cannot be undone.** You will lose:\n"
+             f"• All levels, XP, and stats\n"
+             f"• All {format_number(player_data.get('gold', 0))} gold\n"
+             f"• All {len(player_data.get('inventory', []))} items in inventory\n"
+             f"• All equipped gear\n"
+             f"• All quest progress and achievements\n\n"
+             "**Are you absolutely sure you want to proceed?**"),
+            COLORS['error']
+        )
+        embed.set_footer(text="Click 'Confirm Reset' to continue or 'Cancel' to stop.")
+
+        class ResetConfirmationView(discord.ui.View):
+            def __init__(self, original_user_id: str, bot_instance: commands.Bot): # Pass bot instance
+                super().__init__(timeout=60)
+                self.original_user_id = original_user_id
+                self.confirmed_step1 = False
+                self.bot = bot_instance # Store bot instance
+
+            @discord.ui.button(label="Confirm Reset", style=discord.ButtonStyle.danger)
+            async def confirm_reset(self, interaction: discord.Interaction, button: discord.ui.Button):
+                if str(interaction.user.id) != self.original_user_id:
+                    await interaction.response.send_message("❌ This confirmation is not for you!", ephemeral=True)
+                    return
+                
+                self.confirmed_step1 = True
+                for item in self.children: # Disable buttons after first confirmation
+                    item.disabled = True
+                await interaction.response.edit_message(view=self) # Update message to disable buttons
+
+                # Second, final confirmation
+                final_embed = create_embed(
+                    "🚨 **FINAL CONFIRMATION: DATA WIPE IMMINENT** 🚨",
+                    (f"This is your **LAST CHANCE** to cancel. Your entire character data will be **ERASED**.\n\n"
+                     "**Type `I AM SURE` in chat within 15 seconds to finalize the reset.**\n"
+                     "Any other message or no response will cancel the operation."),
+                    COLORS['error']
+                )
+                final_embed.set_footer(text="This cannot be undone. Think carefully.")
+                
+                # Send the final confirmation message
+                if isinstance(interaction, discord.Interaction):
+                    await interaction.followup.send(embed=final_embed)
+                else:
+                    await interaction.channel.send(embed=final_embed)
+
+
+                def check_final_confirm(m):
+                    return m.author == author and m.channel == interaction.channel and m.content.upper() == 'I AM SURE'
+
+                try:
+                    final_msg = await self.bot.wait_for('message', check=check_final_confirm, timeout=15.0)
+                    
+                    # Perform reset
+                    if update_user_rpg_data(self.original_user_id, {}): # Empty dict effectively deletes all data
+                        success_embed = create_embed(
+                            "✅ Character Reset Complete",
+                            "Your character has been completely deleted.\n\nUse `/start` to create a new character and begin your adventure again!",
+                            COLORS['success']
+                        )
+                        await final_msg.reply(embed=success_embed)
+                        logger.info(f"User {self.original_user_id} successfully reset their character.")
+                    else:
+                        fail_embed = create_embed(
+                            "❌ Reset Failed",
+                            "An error occurred during reset. Your character might still exist. Please contact an admin.",
+                            COLORS['error']
+                        )
+                        await final_msg.reply(embed=fail_embed)
+                        logger.error(f"Owner {author.id} failed to reset character for user {self.original_user_id}.")
+
+                except asyncio.TimeoutError:
+                    cancel_embed = create_embed(
+                        "⏰ Reset Timed Out",
+                        "Character reset timed out and was cancelled. Your character is safe!",
+                        COLORS['warning']
+                    )
+                    if isinstance(interaction, discord.Interaction):
+                        await interaction.followup.send(embed=cancel_embed)
+                    else:
+                        await interaction.channel.send(embed=cancel_embed)
+                except Exception as e:
+                    logger.error(f"Error during final reset confirmation for {self.original_user_id}: {e}")
+                    error_embed = create_embed(
+                        "❌ An Error Occurred",
+                        "An unexpected error occurred during reset. Please contact an admin.",
+                        COLORS['error']
+                    )
+                    if isinstance(interaction, discord.Interaction):
+                        await interaction.followup.send(embed=error_embed)
+                    else:
+                        await interaction.channel.send(embed=error_embed)
+                self.stop() # Stop the view after final confirmation or timeout
+
+            @discord.ui.button(label="Cancel", style=discord.ButtonStyle.secondary)
+            async def cancel_reset(self, interaction: discord.Interaction, button: discord.ui.Button):
+                if str(interaction.user.id) != self.original_user_id:
+                    await interaction.response.send_message("❌ This confirmation is not for you!", ephemeral=True)
+                    return
+                
+                embed = create_embed(
+                    "❌ Reset Cancelled",
+                    "Character reset has been cancelled. Your character is safe!",
+                    COLORS['info']
+                )
+                await interaction.response.edit_message(embed=embed, view=None) # Remove buttons
+                self.stop() # Stop the view
+
+            async def on_timeout(self):
+                # If the view times out before any button is pressed
+                if not self.confirmed_step1:
+                    original_message = await self.message.channel.fetch_message(self.message.id)
+                    embed = create_embed(
+                        "⏰ Reset Timed Out",
+                        "Character reset timed out and was cancelled. Your character is safe!",
+                        COLORS['warning']
+                    )
+                    await original_message.edit(embed=embed, view=None) # Edit original message to remove buttons
+
+
+        view = ResetConfirmationView(user_id, self.bot) # Pass bot instance
+        # Store the message sent by the bot so the view can edit it on timeout
+        if isinstance(ctx, discord.Interaction):
+            await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+            view.message = await interaction.original_response()
+        else:
+            message = await ctx.send(embed=embed, view=view)
+            view.message = message
+
+
+async def setup(bot):
+    """
+    Setup function for the RPGGames cog.
+    Adds the cog to the bot.
+    """
+    await bot.add_cog(RPGGamesCog(bot))
+    logger.info("✅ RPG Games cog loaded successfully!")

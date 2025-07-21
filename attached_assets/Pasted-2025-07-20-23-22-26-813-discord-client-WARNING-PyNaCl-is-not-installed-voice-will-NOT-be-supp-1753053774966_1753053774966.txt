@@ -1,0 +1,21 @@
+2025-07-20 23:22:26,813 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-20 23:22:26,814 - web_server - INFO - Starting web server on port 5000
+ * Serving Flask app 'web_server'
+ * Debug mode: off
+2025-07-20 23:22:26,818 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-20 23:22:27,424 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-20 23:22:27,424 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-20 23:22:27,425 - __main__ - ERROR - Failed to load cog cogs.economy: Extension 'cogs.economy' raised an error: SyntaxError: invalid syntax (economy.py, line 2)
+2025-07-20 23:22:27,426 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-20 23:22:27,428 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-20 23:22:27,442 - __main__ - INFO - Loaded cog: cogs.rpg_core
+2025-07-20 23:22:27,458 - __main__ - ERROR - Failed to load cog cogs.rpg_games: Extension 'cogs.rpg_games' raised an error: ImportError: cannot import name 'TACTICAL_MONSTERS' from 'rpg_data.game_data' (/home/runner/workspace/rpg_data/game_data.py)
+2025-07-20 23:22:27,459 - __main__ - ERROR - Failed to load cog cogs.rpg_combat: Extension 'cogs.rpg_combat' raised an error: ImportError: cannot import name 'TACTICAL_MONSTERS' from 'rpg_data.game_data' (/home/runner/workspace/rpg_data/game_data.py)
+2025-07-20 23:22:27,463 - __main__ - ERROR - Failed to load cog cogs.rpg_dungeons: Extension 'cogs.rpg_dungeons' raised an error: ImportError: cannot import name 'TACTICAL_MONSTERS' from 'rpg_data.game_data' (/home/runner/workspace/rpg_data/game_data.py)
+2025-07-20 23:22:27,472 - __main__ - INFO - Loaded cog: cogs.rpg_shop
+2025-07-20 23:22:27,472 - discord.client - INFO - logging in using static token
+2025-07-20 23:22:29,048 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: f8fc41e80feb90dbebba4c9c714c5b8c).
+2025-07-20 23:22:31,083 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-20 23:22:31,083 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-20 23:22:31,389 - utils.database - INFO - Database initialization complete
+2025-07-20 23:22:31,390 - __main__ - INFO - Database initialized successfully

@@ -1,0 +1,2935 @@
+import discord
+from discord.ext import commands
+import random
+import asyncio
+from typing import Dict, List, Optional, Tuple
+import json
+import logging
+from datetime import datetime, timedelta
+
+# Import utility functions and constants
+from utils.database import get_user_data, update_user_data, ensure_user_exists
+from utils.helpers import create_embed, format_number, create_progress_bar, calculate_level_from_xp, calculate_stats_with_equipment, calculate_xp_for_level # Added calculate_xp_for_level
+from utils.constants import COLORS, EMOJIS, RARITIES, STATUS_EFFECTS, ELEMENTS, ELEMENT_EFFECTIVENESS
+from config import get_server_config, is_module_enabled
+
+# Import game data modules
+from game_data.items import ITEMS
+from game_data.monsters import MONSTERS
+from game_data.skills import SKILLS
+from game_data.dungeons import DUNGEONS, TRAPS, PUZZLES
+# from game_data.crafting_recipes import RECIPES # Uncomment when you have this file
+
+# Initialize logger for this cog
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+# Ensure handlers are not duplicated if this cog is reloaded
+if not logger.handlers:
+    handler = logging.FileHandler('bot.log')
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+
+# Game constants (Keeping them here for easy reference, but ideally loaded from a single source)
+CLASSES = {
+    "warrior": {
+        "name": "⚔️ Warrior",
+        "description": "Masters of melee combat with high defense",
+        "base_stats": {"strength": 15, "dexterity": 8, "intelligence": 5, "vitality": 12, "luck": 5},
+        "hp_multiplier": 1.3,
+        "mana_multiplier": 0.7,
+        "starting_skills": ["cleave", "shield_bash"]
+    },
+    "mage": {
+        "name": "🔮 Mage",
+        "description": "Wielders of powerful magic and elemental forces",
+        "base_stats": {"strength": 5, "dexterity": 8, "intelligence": 15, "vitality": 7, "luck": 10},
+        "hp_multiplier": 0.8,
+        "mana_multiplier": 1.5,
+        "starting_skills": ["fireball", "arcane_shield"]
+    },
+    "rogue": {
+        "name": "🗡️ Rogue",
+        "description": "Agile fighters with high critical hit chance",
+        "base_stats": {"strength": 10, "dexterity": 15, "intelligence": 8, "vitality": 8, "luck": 12},
+        "hp_multiplier": 1.0,
+        "mana_multiplier": 1.0,
+        "starting_skills": ["stealth_strike", "evasive_maneuver"]
+    },
+    "archer": {
+        "name": "🏹 Archer",
+        "description": "Ranged specialists with precision strikes",
+        "base_stats": {"strength": 8, "dexterity": 15, "intelligence": 10, "vitality": 9, "luck": 8},
+        "hp_multiplier": 0.9,
+        "mana_multiplier": 1.1,
+        "starting_skills": ["multi_shot", "piercing_arrow"]
+    },
+    "healer": {
+        "name": "✨ Healer",
+        "description": "Support class with healing and buff abilities",
+        "base_stats": {"strength": 6, "dexterity": 8, "intelligence": 12, "vitality": 11, "luck": 13},
+        "hp_multiplier": 1.1,
+        "mana_multiplier": 1.3,
+        "starting_skills": ["healing_light", "bless_ally"]
+    },
+    "chrono_weave": {
+        "name": "⏰ Chrono Weave",
+        "description": "Time manipulators with unique temporal abilities",
+        "base_stats": {"strength": 8, "dexterity": 10, "intelligence": 13, "vitality": 9, "luck": 15},
+        "hp_multiplier": 1.0,
+        "mana_multiplier": 1.2,
+        "hidden": True, # Mark as hidden
+        "starting_skills": ["temporal_surge", "time_stop"]
+    }
+}
+
+# --- Trade System Classes ---
+class TradeView(discord.ui.View):
+    """Interactive trading interface."""
+
+    def __init__(self, ctx, player_a_data, player_b_data, trade_id, initial_message):
+        super().__init__(timeout=600)
+        self.ctx = ctx
+        self.player_a_data = player_a_data # This is the full user_data dict for player A
+        self.player_b_data = player_b_data # This is the full user_data dict for player B
+        self.trade_id = trade_id
+        self.initial_message = initial_message # The message to update
+
+        self.player_a_id = str(player_a_data['user_id'])
+        self.player_b_id = str(player_b_data['user_id'])
+
+        # Offers are temporary and not directly linked to player inventory until finalized
+        self.player_a_offer = {"items": {}, "coins": 0}
+        self.player_b_offer = {"items": {}, "coins": 0}
+        self.player_a_confirmed = False
+        self.player_b_confirmed = False
+
+        # Add buttons for trade actions
+        self.add_item(discord.ui.Button(label="Add Item", style=discord.ButtonStyle.secondary, custom_id="add_item_button"))
+        self.add_item(discord.ui.Button(label="Remove Item", style=discord.ButtonStyle.secondary, custom_id="remove_item_button"))
+        self.add_item(discord.ui.Button(label="Add Coins", style=discord.ButtonStyle.secondary, custom_id="add_coins_button"))
+        self.add_item(discord.ui.Button(label="Remove Coins", style=discord.ButtonStyle.secondary, custom_id="remove_coins_button"))
+        self.add_item(discord.ui.Button(label="Confirm Offer", style=discord.ButtonStyle.secondary, custom_id="confirm_offer_button"))
+        self.add_item(discord.ui.Button(label="Cancel Trade", style=discord.ButtonStyle.danger, custom_id="cancel_trade_button"))
+
+        self.update_buttons_state() # Initial state of buttons
+
+    def update_buttons_state(self):
+        # Logic to enable/disable buttons based on confirmation status
+        for item in self.children:
+            if isinstance(item, discord.ui.Button):
+                if item.custom_id == "confirm_offer_button":
+                    item.style = discord.ButtonStyle.success if (self.player_a_confirmed and self.player_b_confirmed) else discord.ButtonStyle.secondary
+                    item.label = "Finalize Trade" if (self.player_a_confirmed and self.player_b_confirmed) else "Confirm Offer"
+                elif item.custom_id in ["add_item_button", "add_coins_button", "remove_item_button", "remove_coins_button"]:
+                    item.disabled = self.player_a_confirmed or self.player_b_confirmed # Disable if either confirmed
+                # Cancel button is always enabled
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        """Only allow participants to interact."""
+        if str(interaction.user.id) not in [self.player_a_id, self.player_b_id]:
+            await interaction.response.send_message("You are not part of this trade!", ephemeral=True)
+            return False
+        return True
+
+    def create_trade_embed(self):
+        """Create the trade display embed."""
+        embed = discord.Embed(
+            title="🔄 Player Trade",
+            description=f"Trade between <@{self.player_a_id}> and <@{self.player_b_id}>",
+            color=COLORS['primary']
+        )
+
+        # Helper to format offer
+        def format_offer(offer_dict):
+            items_text = []
+            for item_id, qty in offer_dict["items"].items():
+                item_name = ITEMS.get(item_id, {}).get('name', item_id)
+                items_text.append(f"{item_name} x{qty}")
+            return f"**Items:** {', '.join(items_text) if items_text else 'None'}\n" \
+                   f"**Coins:** {format_number(offer_dict['coins'])}"
+
+        embed.add_field(
+            name=f"<@{self.player_a_id}>'s Offer",
+            value=f"{format_offer(self.player_a_offer)}\n"
+                  f"**Status:** {'✅ Confirmed' if self.player_a_confirmed else '⏳ Pending'}",
+            inline=True
+        )
+
+        embed.add_field(
+            name=f"<@{self.player_b_id}>'s Offer",
+            value=f"{format_offer(self.player_b_offer)}\n"
+                  f"**Status:** {'✅ Confirmed' if self.player_b_confirmed else '⏳ Pending'}",
+            inline=True
+        )
+
+        if self.player_a_confirmed and self.player_b_confirmed:
+            status = "🟢 Ready to finalize!"
+        elif self.player_a_confirmed or self.player_b_confirmed:
+            status = "🟡 Waiting for both confirmations"
+        else:
+            status = "🔴 Setting up offers"
+
+        embed.add_field(
+            name="Trade Status",
+            value=status,
+            inline=False
+        )
+
+        embed.set_footer(text="Use the buttons below to modify your offer or confirm the trade")
+        return embed
+
+    @discord.ui.button(label="Confirm Offer", style=discord.ButtonStyle.secondary, custom_id="confirm_offer_button")
+    async def confirm_offer(self, interaction: discord.Interaction, button: discord.ui.Button):
+        user_id = str(interaction.user.id)
+
+        if user_id == self.player_a_id:
+            self.player_a_confirmed = True
+        elif user_id == self.player_b_id:
+            self.player_b_confirmed = True
+        
+        # If both confirmed, enable finalize
+        if self.player_a_confirmed and self.player_b_confirmed:
+            # This button's label and style are updated in update_buttons_state
+            pass # No need to change button here, it's handled by update_buttons_state
+        else:
+            # Reset other player's confirmation if offer changes
+            if (user_id == self.player_a_id and self.player_b_confirmed) or \
+               (user_id == self.player_b_id and self.player_a_confirmed):
+                if user_id == self.player_a_id: self.player_b_confirmed = False
+                else: self.player_a_confirmed = False
+                await interaction.followup.send("Your offer is confirmed! The other player's confirmation has been reset due to changes.", ephemeral=True)
+
+        self.update_buttons_state()
+        embed = self.create_trade_embed()
+        await interaction.response.edit_message(embed=embed, view=self)
+
+        if self.player_a_confirmed and self.player_b_confirmed:
+            await interaction.followup.send("Both players have confirmed! Click 'Finalize Trade' to complete.", ephemeral=False)
+
+
+    @discord.ui.button(label="Cancel Trade", style=discord.ButtonStyle.danger, custom_id="cancel_trade_button")
+    async def cancel_trade(self, interaction: discord.Interaction, button: discord.ui.Button):
+        user_id = str(interaction.user.id)
+
+        embed = create_embed(
+            "🚫 Trade Cancelled",
+            f"Trade cancelled by <@{user_id}>. Returning all offered items and coins.",
+            COLORS['error']
+        )
+        await interaction.response.edit_message(embed=embed, view=None)
+        await self.finalize_trade(cancelled=True) # Call finalize with cancelled flag
+        self.stop()
+
+    async def finalize_trade(self, cancelled=False):
+        # This method handles the actual transfer or refund
+        rpg_cog = self.ctx.bot.get_cog('RPGGamesCog')
+        if not rpg_cog:
+            logger.error("RPGGamesCog not found during trade finalization.")
+            return
+
+        # Remove trade from active_trades
+        if self.trade_id in rpg_cog.active_trades:
+            del rpg_cog.active_trades[self.trade_id]
+            # Also remove user mappings
+            if self.player_a_id in rpg_cog.active_trades and rpg_cog.active_trades[self.player_a_id] == self.trade_id:
+                del rpg_cog.active_trades[self.player_a_id]
+            if self.player_b_id in rpg_cog.active_trades and rpg_cog.active_trades[self.player_b_id] == self.trade_id:
+                del rpg_cog.active_trades[self.player_b_id]
+
+
+        # Get fresh data to ensure consistency
+        player_a_data_fresh = get_user_data(self.player_a_id)
+        player_b_data_fresh = get_user_data(self.player_b_id)
+
+        if not player_a_data_fresh or not player_b_data_fresh:
+            logger.error(f"Missing player data during trade finalization for trade_id: {self.trade_id}")
+            return
+
+        # Refund or transfer
+        if cancelled:
+            # Refund Player A's offer
+            player_a_data_fresh['rpg_data']['coins'] += self.player_a_offer['coins']
+            for item_id, qty in self.player_a_offer['items'].items():
+                player_a_data_fresh['rpg_data']['inventory'][item_id] = player_a_data_fresh['rpg_data']['inventory'].get(item_id, 0) + qty
+            
+            # Refund Player B's offer
+            player_b_data_fresh['rpg_data']['coins'] += self.player_b_offer['coins']
+            for item_id, qty in self.player_b_offer['items'].items():
+                player_b_data_fresh['rpg_data']['inventory'][item_id] = player_b_data_fresh['rpg_data']['inventory'].get(item_id, 0) + qty
+            
+            update_user_data(self.player_a_id, player_a_data_fresh)
+            update_user_data(self.player_b_id, player_b_data_fresh)
+            logger.info(f"Trade {self.trade_id} cancelled and offers refunded.")
+            return
+
+        # Actual transfer logic
+        # Check if players still have the items/coins they offered (atomic check)
+        # For simplicity, we'll assume the items are still there as they were removed from inventory when added to offer.
+        # If you were to implement a more complex system where items are only "locked" but not removed from inventory
+        # until finalized, this check would be more involved.
+
+        # Player A gives to Player B
+        player_a_data_fresh['rpg_data']['coins'] -= self.player_a_offer['coins']
+        for item_id, qty in self.player_a_offer['items'].items():
+            # No need to check, already removed from inventory when added to offer
+            pass
+
+        # Player B gives to Player A
+        player_b_data_fresh['rpg_data']['coins'] -= self.player_b_offer['coins']
+        for item_id, qty in self.player_b_offer['items'].items():
+            # No need to check, already removed from inventory when added to offer
+            pass
+
+        # Player B receives from Player A
+        player_b_data_fresh['rpg_data']['coins'] += self.player_a_offer['coins']
+        for item_id, qty in self.player_a_offer['items'].items():
+            player_b_data_fresh['rpg_data']['inventory'][item_id] = player_b_data_fresh['rpg_data']['inventory'].get(item_id, 0) + qty
+
+        # Player A receives from Player B
+        player_a_data_fresh['rpg_data']['coins'] += self.player_b_offer['coins']
+        for item_id, qty in self.player_b_offer['items'].items():
+            player_a_data_fresh['rpg_data']['inventory'][item_id] = player_a_data_fresh['rpg_data']['inventory'].get(item_id, 0) + qty
+
+        update_user_data(self.player_a_id, player_a_data_fresh)
+        update_user_data(self.player_b_id, player_b_data_fresh)
+        logger.info(f"Trade {self.trade_id} finalized successfully.")
+        
+        # Send confirmation to both players
+        await self.ctx.send(embed=create_embed("✅ Trade Complete!", f"The trade between <@{self.player_a_id}> and <@{self.player_b_id}> has been successfully completed!", COLORS['success']))
+
+    async def on_timeout(self):
+        embed = create_embed(
+            "⏰ Trade Timed Out",
+            "The trade session has expired. All offered items and coins have been returned.",
+            COLORS['warning']
+        )
+        await self.initial_message.edit(embed=embed, view=None)
+        await self.finalize_trade(cancelled=True) # Refund on timeout
+        self.stop()
+
+# Helper Select menu for adding/removing items in trade (requires separate command handling)
+class TradeItemSelect(discord.ui.Select):
+    def __init__(self, player_id, inventory):
+        # Limit options to prevent Discord API errors for too many options
+        options_list = []
+        for item_id, qty in inventory.items():
+            item_info = ITEMS.get(item_id)
+            if item_info and qty > 0:
+                options_list.append(discord.SelectOption(label=item_info['name'], value=item_id, description=f"Qty: {qty}"))
+        
+        # Discord select menus have a limit of 25 options.
+        # This is a simplification. For more items, pagination or text input is needed.
+        super().__init__(placeholder=f"Select item for offer...", options=options_list[:25], custom_id=f"trade_item_select_{player_id}")
+        self.player_id = player_id
+
+    async def callback(self, interaction: discord.Interaction):
+        # This callback is just for selection, actual add/remove will be via commands
+        # The actual adding/removing is handled by the !trade additem/removeitem commands
+        # This select is mostly for showing what's available.
+        selected_item_id = self.values[0]
+        await interaction.response.send_message(f"You selected {ITEMS[selected_item_id]['name']}. Use `!trade additem {ITEMS[selected_item_id]['name']}` or `!trade removeitem {ITEMS[selected_item_id]['name']}` in chat to modify your offer.", ephemeral=True)
+
+
+# --- Combat System Classes ---
+class CombatView(discord.ui.View):
+    """Enhanced interactive combat interface."""
+
+    def __init__(self, bot, player_data, enemy_data, ctx, message, combat_type="monster"):
+        super().__init__(timeout=300)
+        self.bot = bot
+        self.player_data = player_data # This is the full user_data dict, passed by reference
+        self.enemy_data = enemy_data.copy() # Enemy is a copy, won't persist if not saved
+        self.ctx = ctx
+        self.message = message # The message to update
+        self.combat_type = combat_type # "monster", "pvp"
+
+        self.combat_log = []
+        self.turn = "player" # "player" or "enemy"
+        self.turn_count = 0
+        self.is_finished = False
+
+        # Player's current combat stats (can change with buffs/debuffs)
+        self.player_current_hp = self.player_data['rpg_data']['hp']
+        self.player_current_mana = self.player_data['rpg_data']['mana']
+        self.player_active_status_effects = self.player_data['rpg_data'].get('active_status_effects', [])
+
+        # Enemy's current combat stats
+        self.enemy_active_status_effects = [] # Enemies also get status effects
+
+        # Action Points
+        self.player_ap_per_turn = self.player_data['rpg_data'].get('max_action_points', 3)
+        self.enemy_ap_per_turn = self.enemy_data.get('action_points', 1) # Default for monsters
+        self.player_current_ap = self.player_ap_per_turn
+        self.enemy_current_ap = self.enemy_ap_per_turn
+
+        self.update_buttons_state() # Initial state of buttons
+
+    def update_buttons_state(self):
+        is_player_turn = self.turn == "player"
+        player_has_ap = self.player_current_ap > 0
+        
+        for item in self.children:
+            if isinstance(item, discord.ui.Button):
+                # Only player's buttons are enabled on player's turn
+                item.disabled = not (is_player_turn and player_has_ap)
+            elif isinstance(item, discord.ui.Select):
+                item.disabled = not (is_player_turn and player_has_ap)
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        """Only allow the player whose turn it is to interact."""
+        if str(interaction.user.id) != str(self.ctx.author.id):
+            await interaction.response.send_message("This is not your turn or your battle!", ephemeral=True)
+            return False
+        return True
+
+    async def advance_turn(self, interaction: discord.Interaction):
+        if self.is_finished:
+            return
+
+        # Apply status effects at turn start
+        self.apply_and_expire_status_effects()
+
+        # Check for combat end after status effects
+        if self.enemy_data['hp'] <= 0 or self.player_current_hp <= 0:
+            await self.end_combat(interaction, player_won=self.player_current_hp > 0)
+            return
+
+        self.turn_count += 1
+        self.turn = "enemy" if self.turn == "player" else "player"
+
+        if self.turn == "player":
+            self.combat_log.append("--- Your Turn ---")
+            self.player_current_ap = self.player_ap_per_turn # Reset AP
+            # Apply AP bonuses/penalties from status effects
+            for effect in self.player_active_status_effects:
+                effect_info = STATUS_EFFECTS.get(effect['id'])
+                if effect_info and effect_info.get('ap_gain'):
+                    self.player_current_ap += effect_info['ap_gain']
+                if effect_info and effect_info.get('ap_reduction'):
+                    self.player_current_ap -= effect_info['ap_reduction']
+            self.player_current_ap = max(0, self.player_current_ap) # Ensure AP doesn't go negative
+            
+            self.update_buttons_state()
+            await self.update_combat_display(interaction)
+        else: # Enemy turn
+            self.combat_log.append(f"--- {self.enemy_data['name']}'s Turn ---")
+            self.enemy_current_ap = self.enemy_ap_per_turn # Reset AP
+            self.update_buttons_state() # Disable player buttons
+            await self.enemy_ai_action(interaction)
+
+    # --- Player Actions ---
+    @discord.ui.button(label="⚔️ Attack", style=discord.ButtonStyle.danger)
+    async def attack_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if self.turn != "player" or self.player_current_ap < 1:
+            await interaction.response.send_message("It's not your turn or not enough AP!", ephemeral=True)
+            return
+        
+        self.player_current_ap -= 1
+        await self.player_attack_action(interaction)
+        await self.update_combat_display(interaction) # Update for AP usage
+
+        if self.player_current_ap == 0:
+            await self.advance_turn(interaction)
+
+    async def player_attack_action(self, interaction):
+        # Calculate effective stats for player (including equipment and temporary buffs)
+        effective_player_stats = calculate_stats_with_equipment(self.player_data['rpg_data'])
+
+        base_damage = effective_player_stats['attack']
+        
+        # Critical hit chance
+        crit_chance = 0.1 + (effective_player_stats['luck'] * 0.01)
+        is_crit = random.random() < crit_chance
+        if is_crit:
+            base_damage = int(base_damage * 1.5) # Critical hit multiplier
+
+        # Apply elemental effectiveness (player weapon element vs enemy element)
+        player_weapon_element = effective_player_stats.get('weapon_element', 'neutral')
+        element_multiplier = 1.0
+        if player_weapon_element in ELEMENT_EFFECTIVENESS:
+            if self.enemy_data['element'] in ELEMENT_EFFECTIVENESS[player_weapon_element].get('strong_against', []):
+                element_multiplier = 1.25
+            elif self.enemy_data['element'] in ELEMENT_EFFECTIVENESS[player_weapon_element].get('weak_to', []):
+                element_multiplier = 0.75
+        
+        # Apply enemy defense
+        damage_after_defense = max(1, base_damage - self.enemy_data['defense'])
+        
+        # Apply damage variance
+        final_damage = max(1, int(damage_after_defense * random.uniform(0.85, 1.15) * element_multiplier))
+        
+        self.enemy_data['hp'] -= final_damage
+        
+        crit_text = " **CRITICAL HIT!**" if is_crit else ""
+        self.combat_log.append(f"⚔️ You deal **{final_damage}** damage{crit_text} to {self.enemy_data['name']}!")
+        logger.info(f"Player {self.ctx.author.id} attacked {self.enemy_data['name']} for {final_damage} damage.")
+
+        if self.enemy_data['hp'] <= 0:
+            await self.end_combat(interaction, player_won=True)
+
+    @discord.ui.button(label="🛡️ Defend", style=discord.ButtonStyle.secondary)
+    async def defend_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if self.turn != "player" or self.player_current_ap < 1:
+            await interaction.response.send_message("It's not your turn or not enough AP!", ephemeral=True)
+            return
+        
+        self.player_current_ap -= 1
+        self.player_data['rpg_data']['defending'] = True # Temporary flag for next enemy turn
+        self.combat_log.append("🛡️ You brace for the enemy's attack, reducing incoming damage!")
+        logger.info(f"Player {self.ctx.author.id} chose to defend.")
+
+        await self.update_combat_display(interaction)
+        if self.player_current_ap == 0:
+            await self.advance_turn(interaction)
+
+    @discord.ui.button(label="💨 Flee", style=discord.ButtonStyle.secondary)
+    async def flee_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if self.turn != "player" or self.player_current_ap < 1:
+            await interaction.response.send_message("It's not your turn or not enough AP!", ephemeral=True)
+            return
+        
+        self.player_current_ap -= 1
+        flee_chance = 0.7 + (self.player_data['rpg_data']['dexterity'] * 0.02) # Dexterity based flee
+        
+        if random.random() < flee_chance:
+            embed = create_embed(
+                "💨 Escape Successful!",
+                "You successfully fled from battle!",
+                COLORS['warning']
+            )
+            await interaction.response.edit_message(embed=embed, view=None)
+            await self.end_combat(interaction, player_won=False, fled=True) # Indicate fled
+            logger.info(f"Player {self.ctx.author.id} successfully fled from battle.")
+        else:
+            self.combat_log.append("💨 Failed to escape! The enemy gets a free hit.")
+            logger.info(f"Player {self.ctx.author.id} failed to flee.")
+            await self.update_combat_display(interaction)
+            # Enemy gets a free hit (handled by advancing turn)
+            if self.player_current_ap == 0:
+                await self.advance_turn(interaction)
+
+    @discord.ui.button(label="🔮 Skills", style=discord.ButtonStyle.primary)
+    async def skills_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if self.turn != "player" or self.player_current_ap < 1:
+            await interaction.response.send_message("It's not your turn or not enough AP!", ephemeral=True)
+            return
+        
+        rpg_data = self.player_data['rpg_data']
+        player_class = rpg_data.get('class')
+        
+        if not player_class or player_class not in SKILLS:
+            await interaction.response.send_message("You don't have a class or skills defined!", ephemeral=True)
+            return
+
+        learned_skills = rpg_data.get('skills_learned', [])
+        
+        options = []
+        for skill_id in learned_skills:
+            skill_info = SKILLS[player_class].get(skill_id)
+            if skill_info:
+                # Add cooldown check here if implemented
+                options.append(
+                    discord.SelectOption(
+                        label=f"{skill_info['name']} ({skill_info['mana_cost']} Mana)",
+                        value=skill_id,
+                        description=skill_info['description']
+                    )
+                )
+        
+        if not options:
+            await interaction.response.send_message("You haven't learned any skills yet!", ephemeral=True)
+            return
+
+        skill_select = discord.ui.Select(placeholder="Choose a skill...", options=options, custom_id="skill_select")
+        skill_select.callback = self.use_skill_callback # Attach callback
+        
+        skill_view = discord.ui.View(timeout=60)
+        skill_view.add_item(skill_select)
+        
+        await interaction.response.send_message("Select a skill to use:", view=skill_view, ephemeral=True)
+
+    async def use_skill_callback(self, interaction: discord.Interaction):
+        skill_id = interaction.data['values'][0]
+        rpg_data = self.player_data['rpg_data']
+        player_class = rpg_data.get('class')
+
+        if not player_class or player_class not in SKILLS or skill_id not in SKILLS[player_class]:
+            await interaction.response.send_message("Invalid skill selected!", ephemeral=True)
+            return
+
+        skill_info = SKILLS[player_class][skill_id]
+        
+        if rpg_data['mana'] < skill_info['mana_cost']:
+            await interaction.response.send_message(f"Not enough Mana! You need {skill_info['mana_cost']} mana.", ephemeral=True)
+            return
+        
+        # Apply AP cost for skill
+        if self.player_current_ap < 1: # Should be checked by button already, but safety
+            await interaction.response.send_message("Not enough AP to use a skill!", ephemeral=True)
+            return
+        self.player_current_ap -= 1
+
+        rpg_data['mana'] -= skill_info['mana_cost']
+        self.combat_log.append(f"🔮 You use {skill_info['name']}!")
+        logger.info(f"Player {self.ctx.author.id} used skill {skill_id}.")
+
+        # Apply skill effects dynamically based on skill_info['effect_details']
+        effect_details = skill_info.get('effect_details', {})
+        effect_type = effect_details.get('type')
+
+        effective_player_stats = calculate_stats_with_equipment(rpg_data)
+
+        if effect_type == 'damage':
+            damage_multiplier = effect_details.get('damage_multiplier', 1.0)
+            skill_damage = int(effective_player_stats['attack'] * damage_multiplier)
+            
+            # Apply elemental effectiveness if skill has element
+            skill_element = skill_info.get('element', 'neutral')
+            element_multiplier = 1.0
+            if skill_element in ELEMENT_EFFECTIVENESS:
+                if self.enemy_data['element'] in ELEMENT_EFFECTIVENESS[skill_element].get('strong_against', []):
+                    element_multiplier = 1.25
+                elif self.enemy_data['element'] in ELEMENT_EFFECTIVENESS[skill_element].get('weak_to', []):
+                    element_multiplier = 0.75
+            
+            final_damage = max(1, int(skill_damage * element_multiplier))
+            self.enemy_data['hp'] -= final_damage
+            self.combat_log.append(f"💥 {skill_info['name']} deals **{final_damage}** damage!")
+
+        elif effect_type == 'heal':
+            heal_amount = effect_details.get('heal_amount', 0)
+            self.player_current_hp = min(rpg_data['max_hp'], self.player_current_hp + heal_amount)
+            self.combat_log.append(f"💖 {skill_info['name']} heals you for **{heal_amount}** HP!")
+
+        elif effect_type == 'status':
+            status_effect_id = effect_details.get('status_effect')
+            duration = effect_details.get('duration', 1)
+            target_type = skill_info.get('target')
+
+            if status_effect_id and status_effect_id in STATUS_EFFECTS:
+                if target_type == 'single_enemy':
+                    self.apply_status_effect(self.enemy_active_status_effects, status_effect_id, duration)
+                    self.combat_log.append(f"✨ {self.enemy_data['name']} is now affected by {STATUS_EFFECTS[status_effect_id]['name']}!")
+                elif target_type == 'self':
+                    self.apply_status_effect(self.player_active_status_effects, status_effect_id, duration)
+                    self.combat_log.append(f"✨ You gain {STATUS_EFFECTS[status_effect_id]['name']}!")
+                # Add logic for all_enemies, all_allies etc.
+
+        elif effect_type == 'utility':
+            # Handle special utility skills like Time Reversal (Chrono Weave)
+            if skill_id == "time_reversal":
+                # This is complex and might need a global cooldown or specific state management
+                self.combat_log.append("🕰️ Time begins to warp around you... (Effect not fully implemented yet)")
+            # Add other utility effects
+
+        # Check if enemy is defeated after skill
+        if self.enemy_data['hp'] <= 0:
+            await interaction.response.send_message(f"You used {skill_info['name']}!", ephemeral=True) # Acknowledge selection
+            await self.end_combat(interaction, player_won=True)
+            return
+
+        await interaction.response.send_message(f"You used {skill_info['name']}!", ephemeral=True) # Acknowledge selection
+        await self.update_combat_display(interaction)
+        
+        if self.player_current_ap == 0:
+            await self.advance_turn(interaction)
+
+    @discord.ui.button(label="🎒 Items", style=discord.ButtonStyle.secondary)
+    async def items_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if self.turn != "player" or self.player_current_ap < 1:
+            await interaction.response.send_message("It's not your turn or not enough AP!", ephemeral=True)
+            return
+        
+        rpg_data = self.player_data['rpg_data']
+        
+        consumables_in_inventory = {
+            item_id: qty for item_id, qty in rpg_data.get('inventory', {}).items()
+            if item_id in ITEMS and ITEMS[item_id]['type'] == 'consumable' and qty > 0
+        }
+        
+        options = []
+        for item_id, qty in consumables_in_inventory.items():
+            item_info = ITEMS[item_id]
+            options.append(
+                discord.SelectOption(label=f"{item_info['name']} ({qty})", value=item_id, description=item_info['effect'].get('description', ''))
+            )
+        
+        if not options:
+            await interaction.response.send_message("You have no consumables in your inventory!", ephemeral=True)
+            return
+
+        item_select = discord.ui.Select(placeholder="Use an item...", options=options, custom_id="item_select")
+        item_select.callback = self.use_item_callback
+        
+        item_view = discord.ui.View(timeout=60)
+        item_view.add_item(item_select)
+        
+        await interaction.response.send_message("Select an item to use:", view=item_view, ephemeral=True)
+
+    async def use_item_callback(self, interaction: discord.Interaction):
+        item_id = interaction.data['values'][0]
+        rpg_data = self.player_data['rpg_data']
+
+        if item_id not in ITEMS or ITEMS[item_id]['type'] != 'consumable':
+            await interaction.response.send_message("Invalid item selected!", ephemeral=True)
+            return
+        
+        if rpg_data['inventory'].get(item_id, 0) <= 0:
+            await interaction.response.send_message("You don't have this item!", ephemeral=True)
+            return
+
+        item_info = ITEMS[item_id]
+
+        if self.player_current_ap < 1: # Safety check
+            await interaction.response.send_message("Not enough AP to use an item!", ephemeral=True)
+            return
+        self.player_current_ap -= 1
+
+        rpg_data['inventory'][item_id] -= 1 # Consume item
+        if rpg_data['inventory'][item_id] == 0:
+            del rpg_data['inventory'][item_id]
+
+        self.combat_log.append(f"🎒 You use {item_info['name']}!")
+        logger.info(f"Player {self.ctx.author.id} used item {item_id}.")
+        
+        # Apply item effect
+        effect_details = item_info.get('effect', {})
+        effect_type = effect_details.get('type')
+
+        if effect_type == 'heal_hp':
+            heal_amount = effect_details.get('amount', 0)
+            self.player_current_hp = min(self.player_data['rpg_data']['max_hp'], self.player_current_hp + heal_amount)
+            self.combat_log.append(f"💖 You heal {heal_amount} HP!")
+        elif effect_type == 'heal_mana':
+            mana_amount = effect_details.get('amount', 0)
+            self.player_current_mana = min(self.player_data['rpg_data']['max_mana'], self.player_current_mana + mana_amount)
+            self.combat_log.append(f"🔵 You restore {mana_amount} Mana!")
+        elif effect_type == 'gain_xp':
+            xp_gain = effect_details.get('amount', 0)
+            rpg_data['xp'] += xp_gain
+            self.combat_log.append(f"✨ You gain {xp_gain} XP!")
+            # Check for level up immediately
+            old_level = rpg_data['level']
+            new_level = calculate_level_from_xp(rpg_data['xp'])
+            if new_level > old_level:
+                rpg_data['level'] = new_level
+                rpg_data['max_hp'] += (new_level - old_level) * 10 # Example scaling
+                rpg_data['max_mana'] += (new_level - old_level) * 5
+                self.player_current_hp = rpg_data['max_hp'] # Full heal on level up
+                self.player_current_mana = rpg_data['max_mana']
+                # Increase base stats as well
+                rpg_data['strength'] += (new_level - old_level) # Example
+                rpg_data['dexterity'] += (new_level - old_level)
+                rpg_data['intelligence'] += (new_level - old_level)
+                rpg_data['vitality'] += (new_level - old_level)
+                rpg_data['luck'] += (new_level - old_level)
+                # Recalculate derived stats like attack/defense
+                effective_stats_after_level = calculate_stats_with_equipment(rpg_data)
+                rpg_data['attack'] = effective_stats_after_level['attack']
+                rpg_data['defense'] = effective_stats_after_level['defense']
+
+                self.combat_log.append(f"🎉 LEVEL UP! You are now level {new_level}!")
+        elif effect_type == 'status':
+            status_effect_id = effect_details.get('status_effect')
+            duration = effect_details.get('duration', 1)
+            if status_effect_id and status_effect_id in STATUS_EFFECTS:
+                self.apply_status_effect(self.player_active_status_effects, status_effect_id, duration)
+                self.combat_log.append(f"✨ You gain {STATUS_EFFECTS[status_effect_id]['name']}!")
+        # ... other item effects ...
+
+        await interaction.response.send_message(f"Used {item_info['name']}!", ephemeral=True)
+        await self.update_combat_display(interaction)
+
+        if self.player_current_ap == 0:
+            await self.advance_turn(interaction)
+
+    # --- Status Effect Logic ---
+    def apply_status_effect(self, target_effect_list: List[Dict], effect_id: str, duration: int):
+        """Adds or refreshes a status effect on the target."""
+        for effect in target_effect_list:
+            if effect['id'] == effect_id:
+                effect['duration'] = duration # Refresh duration
+                logger.debug(f"Refreshed status effect {effect_id} for duration {duration}")
+                return
+        target_effect_list.append({"id": effect_id, "duration": duration})
+        logger.debug(f"Applied new status effect {effect_id} for duration {duration}")
+
+    def apply_and_expire_status_effects(self):
+        """Processes and expires status effects for both combatants at turn start."""
+        # Process player effects
+        new_player_effects = []
+        self.player_turn_skipped = False
+        for effect in self.player_active_status_effects[:]: # Iterate over a copy
+            effect_info = STATUS_EFFECTS.get(effect['id'])
+            if not effect_info: continue # Skip if effect info not found
+
+            if effect_info.get("heal_per_turn"):
+                self.player_current_hp = min(self.player_data['rpg_data']['max_hp'], self.player_current_hp + effect_info["heal_per_turn"])
+                self.combat_log.append(f"💚 You regenerate {effect_info['heal_per_turn']} HP from {effect_info['name']}.")
+            if effect_info.get("damage_per_turn"):
+                self.player_current_hp -= effect_info["damage_per_turn"]
+                self.combat_log.append(f"☠️ You take {effect_info['damage_per_turn']} damage from {effect_info['name']}.")
+            if effect_info.get("skip_turn"):
+                self.player_turn_skipped = True
+
+            effect['duration'] -= 1
+            if effect['duration'] > 0:
+                new_player_effects.append(effect)
+            else:
+                self.combat_log.append(f"✨ {effect_info['name']} effect wears off from you.")
+        self.player_active_status_effects = new_player_effects
+        self.player_data['rpg_data']['active_status_effects'] = self.player_active_status_effects # Sync with player data
+
+        # Process enemy effects
+        new_enemy_effects = []
+        self.enemy_turn_skipped = False
+        for effect in self.enemy_active_status_effects[:]: # Iterate over a copy
+            effect_info = STATUS_EFFECTS.get(effect['id'])
+            if not effect_info: continue # Skip if effect info not found
+
+            if effect_info.get("heal_per_turn"):
+                self.enemy_data['hp'] = min(self.enemy_data['max_hp'], self.enemy_data['hp'] + effect_info["heal_per_turn"])
+                self.combat_log.append(f"💚 {self.enemy_data['name']} regenerates {effect_info['heal_per_turn']} HP from {effect_info['name']}.")
+            if effect_info.get("damage_per_turn"):
+                self.enemy_data['hp'] -= effect_info["damage_per_turn"]
+                self.combat_log.append(f"☠️ {self.enemy_data['name']} takes {effect_info['damage_per_turn']} damage from {effect_info['name']}.")
+            if effect_info.get("skip_turn"):
+                self.enemy_turn_skipped = True
+
+            effect['duration'] -= 1
+            if effect['duration'] > 0:
+                new_enemy_effects.append(effect)
+            else:
+                self.combat_log.append(f"✨ {effect_info['name']} effect wears off from {self.enemy_data['name']}.")
+        self.enemy_active_status_effects = new_enemy_effects
+
+    # --- Enemy AI ---
+    async def enemy_ai_action(self, interaction: discord.Interaction):
+        """Enhanced enemy AI with skills and strategy."""
+        if self.enemy_turn_skipped:
+            self.combat_log.append(f"⛔ {self.enemy_data['name']} is skipping its turn due to a status effect!")
+            await self.update_combat_display(interaction)
+            await self.advance_turn(interaction)
+            return
+
+        rpg_data = self.player_data['rpg_data'] # Player data for AI to react to
+        action_taken = False
+
+        enemy_hp_percent = self.enemy_data['hp'] / self.enemy_data['max_hp']
+        player_hp_percent = self.player_current_hp / rpg_data['max_hp']
+
+        # Get enemy's available abilities (from MONSTERS data)
+        enemy_abilities = self.enemy_data.get('abilities', [])
+        
+        # Simple AI Strategy:
+        # 1. Prioritize healing if low HP (if has healing ability)
+        # 2. Prioritize debuffing player if player has high HP/buffs
+        # 3. Prioritize strong attack if player has low HP
+        # 4. Default to normal attack
+
+        # Try to use an ability
+        if enemy_abilities and random.random() < 0.6: # Chance to use an ability
+            chosen_ability = None
+            
+            # Prioritize healing
+            healing_abilities = [a for a in enemy_abilities if a.get('type') == 'heal']
+            if enemy_hp_percent < 0.5 and healing_abilities:
+                chosen_ability = random.choice(healing_abilities)
+            
+            # Prioritize debuffs if player is healthy
+            if not chosen_ability and player_hp_percent > 0.7:
+                debuff_abilities = [a for a in enemy_abilities if a.get('type') == 'status' and a.get('target') == 'player']
+                if debuff_abilities:
+                    chosen_ability = random.choice(debuff_abilities)
+
+            # Otherwise, pick a random offensive ability
+            if not chosen_ability:
+                offensive_abilities = [a for a in enemy_abilities if a.get('type') == 'damage']
+                if offensive_abilities:
+                    chosen_ability = random.choice(offensive_abilities)
+
+            if chosen_ability:
+                # Apply ability effect
+                self.combat_log.append(f"👹 {self.enemy_data['name']} uses {chosen_ability.get('name', 'an ability')}!")
+                
+                if chosen_ability['type'] == 'damage':
+                    ability_damage = int(self.enemy_data['attack'] * chosen_ability.get('damage_multiplier', 1.0))
+                    # Apply player defense and defending status
+                    final_damage = max(1, ability_damage - rpg_data['defense'])
+                    if rpg_data.get('defending', False):
+                        final_damage = int(final_damage * 0.5)
+                        rpg_data['defending'] = False
+                    self.player_current_hp -= final_damage
+                    self.combat_log.append(f"💥 It deals **{final_damage}** damage!")
+                elif chosen_ability['type'] == 'heal':
+                    heal_amount = chosen_ability.get('amount', 0)
+                    self.enemy_data['hp'] = min(self.enemy_data['max_hp'], self.enemy_data['hp'] + heal_amount)
+                    self.combat_log.append(f"💖 It heals for **{heal_amount}** HP!")
+                elif chosen_ability['type'] == 'status' and chosen_ability.get('target') == 'player':
+                    self.apply_status_effect(self.player_active_status_effects, chosen_ability['status'], chosen_ability['duration'])
+                    self.combat_log.append(f"✨ You are now affected by {STATUS_EFFECTS[chosen_ability['status']]['name']}!")
+                
+                action_taken = True
+                logger.info(f"Enemy {self.enemy_data['name']} used ability {chosen_ability.get('name', 'unknown')}.")
+
+        # Default to normal attack if no ability used or available
+        if not action_taken:
+            enemy_damage = self.enemy_data['attack']
+
+            # Check if player is defending
+            if rpg_data.get('defending', False):
+                enemy_damage = int(enemy_damage * 0.5)
+                rpg_data['defending'] = False
+
+            # Apply elemental effectiveness (enemy element vs player armor element)
+            enemy_element = self.enemy_data.get('element', 'neutral')
+            effective_player_stats = calculate_stats_with_equipment(rpg_data) # Get player's current effective stats
+            player_armor_element = effective_player_stats.get('armor_element', 'neutral')
+            element_multiplier = 1.0
+            if enemy_element in ELEMENT_EFFECTIVENESS:
+                if player_armor_element in ELEMENT_EFFECTIVENESS[enemy_element].get('weak_to', []):
+                    element_multiplier = 1.25
+                elif player_armor_element in ELEMENT_EFFECTIVENESS[enemy_element].get('strong_against', []):
+                    element_multiplier = 0.75
+
+            # Apply damage variance
+            final_damage = max(1, int(enemy_damage * random.uniform(0.85, 1.15) * element_multiplier))
+
+            # Apply damage to player
+            self.player_current_hp -= final_damage
+            self.combat_log.append(f"👹 {self.enemy_data['name']} attacks for **{final_damage}** damage!")
+            logger.info(f"Enemy {self.enemy_data['name']} attacked player {self.ctx.author.id} for {final_damage} damage.")
+
+        # Check if player is defeated
+        if self.player_current_hp <= 0:
+            await self.end_combat(interaction, player_won=False)
+            return
+
+        # Advance turn after enemy action
+        await self.update_combat_display(interaction)
+        await self.advance_turn(interaction)
+
+    # --- Display & End Combat ---
+    async def update_combat_display(self, interaction: discord.Interaction):
+        embed = self.create_combat_embed()
+        try:
+            await interaction.response.edit_message(embed=embed, view=self)
+        except discord.errors.InteractionResponded:
+            # If already responded (e.g., from skill/item select menu), just edit
+            await self.message.edit(embed=embed, view=self)
+        except Exception as e:
+            logger.error(f"Error updating combat display: {e}")
+
+    def create_combat_embed(self):
+        embed = discord.Embed(
+            title="⚔️ Combat",
+            color=COLORS['primary']
+        )
+
+        rpg_data = self.player_data['rpg_data'] # Guaranteed to exist due to checks in cog
+
+        # Player info
+        player_hp_bar = create_progress_bar(self.player_current_hp, rpg_data['max_hp'])
+        player_mana_bar = create_progress_bar(self.player_current_mana, rpg_data['max_mana'], fill_emoji="🔵")
+        player_status_text = ", ".join([STATUS_EFFECTS[e['id']]['name'] for e in self.player_active_status_effects]) if self.player_active_status_effects else "None"
+        
+        embed.add_field(
+            name=f"👤 {self.ctx.author.display_name} (AP: {self.player_current_ap}/{self.player_ap_per_turn})",
+            value=f"HP: {self.player_current_hp}/{rpg_data['max_hp']}\n{player_hp_bar}\n"
+                  f"Mana: {self.player_current_mana}/{rpg_data['max_mana']}\n{player_mana_bar}\n"
+                  f"Effects: {player_status_text}",
+            inline=True
+        )
+        
+        # Enemy info
+        enemy_hp_bar = create_progress_bar(self.enemy_data['hp'], self.enemy_data['max_hp'])
+        enemy_status_text = ", ".join([STATUS_EFFECTS[e['id']]['name'] for e in self.enemy_active_status_effects]) if self.enemy_active_status_effects else "None"
+        
+        embed.add_field(
+            name=f"👹 {self.enemy_data['name']} (AP: {self.enemy_current_ap}/{self.enemy_ap_per_turn})",
+            value=f"HP: {self.enemy_data['hp']}/{self.enemy_data['max_hp']}\n{enemy_hp_bar}\n"
+                  f"Effects: {enemy_status_text}",
+            inline=True
+        )
+        
+        # Combat log
+        if self.combat_log:
+            log_text = "\n".join(self.combat_log[-7:]) # Show last 7 actions
+            embed.add_field(
+                name="📜 Combat Log",
+                value=log_text,
+                inline=False
+            )
+        
+        # Turn indicator
+        turn_text = f"🔥 Your Turn ({self.player_current_ap} AP left)" if self.turn == "player" else f"⏳ {self.enemy_data['name']}'s Turn ({self.enemy_current_ap} AP left)"
+        embed.add_field(
+            name="🎯 Current Turn",
+            value=turn_text,
+            inline=False
+        )
+        
+        return embed
+
+    async def end_combat(self, interaction: discord.Interaction, player_won: bool, fled: bool = False):
+        if self.is_finished: return # Prevent multiple calls
+        self.is_finished = True
+        
+        user_id = str(self.ctx.author.id)
+        rpg_cog = self.bot.get_cog('RPGGamesCog')
+
+        # Clear from active battles FIRST (critical for "Already in Battle" fix)
+        if rpg_cog and user_id in rpg_cog.active_battles:
+            del rpg_cog.active_battles[user_id]
+            logger.info(f"Combat ended for {user_id}. Removed from active_battles.")
+
+        # Update player's actual HP/Mana in their stored data
+        self.player_data['rpg_data']['hp'] = self.player_current_hp
+        self.player_data['rpg_data']['mana'] = self.player_current_mana
+        self.player_data['rpg_data']['active_status_effects'] = self.player_active_status_effects # Sync status effects
+
+        rpg_data = self.player_data['rpg_data'] # Guaranteed to exist
+
+        if fled:
+            embed = create_embed(
+                "💨 Escape Successful!",
+                "You successfully fled from battle!",
+                COLORS['warning']
+            )
+            update_user_data(user_id, self.player_data) # Save current HP/Mana/Status
+        elif player_won:
+            xp_reward = self.enemy_data.get('xp_reward', 50)
+            coin_reward = self.enemy_data.get('coin_reward', 25)
+            
+            rpg_data['xp'] += xp_reward
+            rpg_data['coins'] += coin_reward
+
+            old_level = rpg_data['level']
+            new_level = calculate_level_from_xp(rpg_data['xp'])
+            
+            level_up_msg = ""
+            if new_level > old_level:
+                rpg_data['level'] = new_level
+                # Scale max HP/Mana and restore full on level up
+                rpg_data['max_hp'] += (new_level - old_level) * 10
+                rpg_data['max_mana'] += (new_level - old_level) * 5
+                rpg_data['hp'] = rpg_data['max_hp']
+                rpg_data['mana'] = rpg_data['max_mana']
+                # Increase base stats as well
+                rpg_data['strength'] += (new_level - old_level)
+                rpg_data['dexterity'] += (new_level - old_level)
+                rpg_data['intelligence'] += (new_level - old_level)
+                rpg_data['vitality'] += (new_level - old_level)
+                rpg_data['luck'] += (new_level - old_level)
+                # Recalculate derived stats like attack/defense
+                effective_stats_after_level = calculate_stats_with_equipment(rpg_data)
+                rpg_data['attack'] = effective_stats_after_level['attack']
+                rpg_data['defense'] = effective_stats_after_level['defense']
+                level_up_msg = f"\n🎉 **LEVEL UP!** You are now level {new_level}!"
+            
+            # Loot drop (basic implementation)
+            loot_msg = ""
+            if self.enemy_data.get('loot_table'):
+                for item_id, chance in self.enemy_data['loot_table'].items():
+                    if random.random() < chance:
+                        if item_id == "coins": # Special handling for coins in loot
+                            coins_dropped = random.randint(10, 50)
+                            rpg_data['coins'] += coins_dropped
+                            loot_msg += f"\n💰 Found {coins_dropped} coins!"
+                        else:
+                            rpg_data['inventory'][item_id] = rpg_data['inventory'].get(item_id, 0) + 1
+                            loot_msg += f"\n✨ Obtained **{ITEMS[item_id]['name']}**!"
+            
+            update_user_data(user_id, self.player_data)
+            
+            embed = create_embed(
+                "🎉 Victory!",
+                f"You defeated {self.enemy_data['name']}!\n\n"
+                f"**Rewards:**\n"
+                f"XP: +{xp_reward}\n"
+                f"Coins: +{coin_reward}{loot_msg}\n" +
+                level_up_msg,
+                COLORS['success']
+            )
+            logger.info(f"Player {user_id} won combat against {self.enemy_data['name']}.")
+        else:
+            # Player defeated - check for World Ender boss
+            if self.enemy_data.get('world_ender', False):
+                # THE ULTIMATE LOSS
+                if rpg_cog:
+                    rpg_cog.wipe_player_progress(user_id) # Call admin wipe function
+                embed = create_embed(
+                    "💀 CATASTROPHIC DEFEAT!",
+                    f"You were utterly defeated by the **{self.enemy_data['name']}**!\n"
+                    f"As forewarned, your entire being has been reset. All progress, items, skills, and levels are **LOST**.",
+                    COLORS['error']
+                )
+                logger.warning(f"Player {user_id} was defeated by World Ender boss {self.enemy_data['name']} and wiped.")
+            else:
+                # Regular defeat penalties
+                coin_loss = max(10, rpg_data['coins'] // 10)
+                rpg_data['coins'] = max(0, rpg_data['coins'] - coin_loss)
+                rpg_data['xp'] += 10 # Small XP for trying
+                rpg_data['hp'] = 1 # Leave player with 1 HP
+                rpg_data['active_status_effects'] = [] # Clear debuffs
+                update_user_data(user_id, self.player_data)
+                
+                embed = create_embed(
+                    "💀 Defeat!",
+                    f"You were defeated by {self.enemy_data['name']}!\n"
+                    f"You lost **{coin_loss}** coins but gained a little experience from the battle.\n"
+                    f"You are left with 1 HP. Use `$heal` to recover.",
+                    COLORS['error']
+                )
+                logger.info(f"Player {user_id} lost combat against {self.enemy_data['name']}.")
+        
+        try:
+            await interaction.response.edit_message(embed=embed, view=None)
+        except discord.errors.InteractionResponded:
+            await self.message.edit(embed=embed, view=None)
+        except Exception as e:
+            logger.error(f"Error editing message at end of combat: {e}")
+        self.stop() # Stop the view
+
+class RPGGamesCog(commands.Cog):
+    """Enhanced RPG games with interactive features."""
+
+    # Define OWNER_ID as a class attribute
+    OWNER_ID = 1297013439125917766
+
+    def __init__(self, bot):
+        self.bot = bot
+        self.active_battles = {} # user_id -> CombatView instance
+        self.active_dungeons = {} # user_id -> DungeonView instance
+        self.active_trades = {} # trade_id -> TradeView instance
+
+    def create_default_rpg_data(self):
+        """Create default RPG data for new players."""
+        return {
+            'level': 1,
+            'xp': 0,
+            'hp': 100,
+            'max_hp': 100,
+            'mana': 50,
+            'max_mana': 50,
+            'attack': 10,
+            'defense': 5,
+            'coins': 100,
+            'class': None,
+            'strength': 10,
+            'dexterity': 10,
+            'intelligence': 10,
+            'vitality': 10,
+            'luck': 10,
+            'inventory': {}, # item_id: quantity
+            'equipped': {}, # slot: item_id
+            'skills_learned': [], # list of skill IDs
+            'active_status_effects': [], # list of {effect_id, duration}
+            'faction': None,
+            'quests_active': [], # list of {quest_id, progress}
+            'quests_completed': [], # list of quest IDs
+            'profession': None, # blacksmith, alchemist, enchanter
+            'crafting_level': 1,
+            'current_dungeon_id': None,
+            'current_dungeon_floor': None,
+            'current_dungeon_room': None,
+            'dungeon_bosses_defeated': [], # for tracking World Ender bosses
+            'achievements': [], # list of achievement IDs
+            'titles': [], # list of earned titles
+            'last_work_time': None,
+            'last_daily_claim_time': None,
+            'max_action_points': 3 # for combat system
+        }
+
+    # --- Core RPG Commands ---
+    @commands.command(name='start', help='Start your RPG adventure')
+    async def start_adventure(self, ctx):
+        """Start the RPG adventure."""
+        if not is_module_enabled("rpg_games", ctx.guild.id):
+            return
+
+        user_id = str(ctx.author.id)
+        user_data = get_user_data(user_id) # Fetch existing data
+
+        # Check if user already exists and has RPG data
+        if user_data and 'rpg_data' in user_data and user_data['rpg_data'] is not None:
+            embed = create_embed(
+                "🎮 Adventure Already Started!",
+                f"Welcome back, {ctx.author.mention}! Your adventure continues...\n\n"
+                f"**Current Stats:**\n"
+                f"Level: {user_data['rpg_data']['level']}\n"
+                f"HP: {user_data['rpg_data']['hp']}/{user_data['rpg_data']['max_hp']}\n"
+                f"Coins: {format_number(user_data['rpg_data']['coins'])}\n\n"
+                f"Use `$profile` to see your full stats!",
+                COLORS['primary']
+            )
+            await ctx.send(embed=embed)
+            return
+        
+        # If user exists but no rpg_data, or user doesn't exist, create new RPG data
+        if user_data is None: # User didn't exist in DB at all
+            user_data = {"user_id": user_id, "balance": 0, "inventory": "{}", "rpg_data": {}}
+            ensure_user_exists(user_id) # This will create the basic user entry if not exists
+
+        user_data['rpg_data'] = self.create_default_rpg_data()
+        update_user_data(user_id, user_data)
+        
+        logger.info(f"New user started adventure: {ctx.author.id} ({ctx.author.display_name})")
+
+        embed = create_embed(
+            "🎉 Adventure Begins!",
+            f"Welcome to the world of adventure, {ctx.author.mention}!\n\n"
+            f"**You start with:**\n"
+            f"📊 Level 1\n"
+            f"❤️ 100 HP\n"
+            f"💰 100 Coins\n\n"
+            f"**Next Steps:**\n"
+            f"🏛️ Choose your class with `$class`\n"
+            f"⚔️ Start battling with `$battle`\n"
+            f"🏰 Explore dungeons with `$dungeon`\n"
+            f"📋 View your profile with `$profile`",
+            COLORS['success']
+        )
+        await ctx.send(embed=embed)
+
+    @commands.command(name='profile', help='View your character profile')
+    async def profile(self, ctx, user: discord.Member = None):
+        """View character profile."""
+        if not is_module_enabled("rpg_games", ctx.guild.id):
+            return
+
+        target_user = user or ctx.author
+        user_id = str(target_user.id)
+        user_data = get_user_data(user_id)
+
+        if not user_data or 'rpg_data' not in user_data or user_data['rpg_data'] is None:
+            embed = create_embed(
+                "❌ No Character Found",
+                f"{'You haven' if target_user == ctx.author else f'{target_user.display_name} hasn'}t started {'your' if target_user == ctx.author else 'their'} adventure yet!\n"
+                f"Use `$start` to begin!",
+                COLORS['error']
+            )
+            await ctx.send(embed=embed)
+            return
+
+        rpg_data = user_data['rpg_data'] # rpg_data is now guaranteed to exist
+        effective_stats = calculate_stats_with_equipment(rpg_data) # Use effective stats
+
+        # Create profile embed
+        embed = discord.Embed(
+            title=f"👤 {target_user.display_name}'s Profile",
+            color=COLORS['primary']
+        )
+        embed.set_thumbnail(url=target_user.display_avatar.url)
+
+        # Basic info
+        class_name = CLASSES.get(rpg_data.get('class', 'none'), {}).get('name', '❓ No Class')
+        embed.add_field(
+            name="📊 Basic Info",
+            value=f"**Class:** {class_name}\n"
+                  f"**Level:** {rpg_data['level']}\n"
+                  f"**XP:** {format_number(rpg_data['xp'])}\n"
+                  f"**Coins:** {format_number(rpg_data['coins'])}",
+            inline=True
+        )
+
+        # Health and mana
+        hp_bar = create_progress_bar(rpg_data['hp'], effective_stats['max_hp'])
+        mana_bar = create_progress_bar(rpg_data['mana'], effective_stats['max_mana'], fill_emoji="🔵")
+        embed.add_field(
+            name="❤️ Health & Mana",
+            value=f"**HP:** {rpg_data['hp']}/{effective_stats['max_hp']}\n{hp_bar}\n"
+                  f"**Mana:** {rpg_data['mana']}/{effective_stats['max_mana']}\n{mana_bar}",
+            inline=True
+        )
+
+        # Combat stats
+        embed.add_field(
+            name="⚔️ Combat Stats",
+            value=f"**Attack:** {effective_stats['attack']}\n"
+                  f"**Defense:** {effective_stats['defense']}\n"
+                  f"**Strength:** {effective_stats['strength']}\n"
+                  f"**Dexterity:** {effective_stats['dexterity']}\n"
+                  f"**Intelligence:** {effective_stats['intelligence']}\n"
+                  f"**Vitality:** {effective_stats['vitality']}\n"
+                  f"**Luck:** {effective_stats['luck']}",
+            inline=True
+        )
+
+        # Equipment
+        equipped_text = []
+        equipped = rpg_data.get('equipped', {})
+        for slot, item_id in equipped.items():
+            item_name = ITEMS.get(item_id, {}).get('name', item_id)
+            equipped_text.append(f"**{slot.title()}:** {item_name}")
+
+        embed.add_field(
+            name="🛡️ Equipment",
+            value="\n".join(equipped_text) if equipped_text else "No equipment",
+            inline=True
+        )
+
+        # Additional info
+        faction = rpg_data.get('faction', 'None')
+        active_quests = len(rpg_data.get('quests_active', []))
+        skills_learned = len(rpg_data.get('skills_learned', []))
+        embed.add_field(
+            name="📋 Additional Info",
+            value=f"**Faction:** {faction}\n"
+                  f"**Active Quests:** {active_quests}\n"
+                  f"**Skills Learned:** {skills_learned}",
+            inline=True
+        )
+
+        await ctx.send(embed=embed)
+
+    @commands.command(name='class', help='Choose or change your character class')
+    async def choose_class(self, ctx, class_name: str = None):
+        """Choose or change character class."""
+        if not is_module_enabled("rpg_games", ctx.guild.id):
+            return
+
+        user_id = str(ctx.author.id)
+        user_data = get_user_data(user_id)
+
+        if not user_data or 'rpg_data' not in user_data or user_data['rpg_data'] is None:
+            embed = create_embed(
+                "❌ No Character Found",
+                "You haven't started your adventure yet!\nUse `$start` to begin!",
+                COLORS['error']
+            )
+            await ctx.send(embed=embed)
+            return
+
+        rpg_data = user_data['rpg_data'] # rpg_data is now guaranteed to exist
+
+        if not class_name:
+            # Show available classes (excluding hidden ones unless unlocked)
+            embed = discord.Embed(
+                title="🏛️ Available Classes",
+                description="Choose your character class to define your playstyle!",
+                color=COLORS['primary']
+            )
+
+            # Check if user has unlocked Chrono Weave (example condition)
+            chrono_unlocked = rpg_data.get('chrono_weave_unlocked', False)
+
+            for class_key, class_data in CLASSES.items():
+                # Skip hidden classes unless unlocked
+                if class_data.get('hidden', False) and not chrono_unlocked:
+                    continue
+
+                stats_text = ", ".join([f"{k.title()}: {v}" for k, v in class_data['base_stats'].items()])
+                embed.add_field(
+                    name=class_data['name'],
+                    value=f"{class_data['description']}\n**Base Stats:** {stats_text}\n"
+                          f"**HP Multiplier:** {class_data['hp_multiplier']}x\n"
+                          f"**Mana Multiplier:** {class_data['mana_multiplier']}x",
+                    inline=False
+                )
+
+            embed.add_field(
+                name="📝 How to Choose",
+                value="Use `$class <class_name>` to select a class.\n"
+                      "Example: `$class warrior`",
+                inline=False
+            )
+
+            if not chrono_unlocked:
+                embed.add_field(
+                    name="🌟 Hidden Classes",
+                    value="There are hidden classes waiting to be unlocked...\n"
+                          "Complete special quests to discover them!",
+                    inline=False
+                )
+
+            await ctx.send(embed=embed)
+            return
+
+        # Validate class choice
+        class_key = class_name.lower().replace(" ", "_")
+
+        # Check if class exists
+        if class_key not in CLASSES:
+            # Try partial matching
+            matching_classes = []
+            for key, data in CLASSES.items():
+                if class_name.lower() in data['name'].lower() or class_name.lower() in key:
+                    matching_classes.append((key, data['name']))
+
+            if matching_classes:
+                suggestions = "\n".join([f"• `{key}` - {name}" for key, name in matching_classes])
+                embed = create_embed(
+                    "❌ Class Not Found",
+                    f"'{class_name}' is not a valid class.\n\n**Did you mean:**\n{suggestions}",
+                    COLORS['error']
+                )
+            else:
+                embed = create_embed(
+                    "❌ Invalid Class",
+                    f"'{class_name}' is not a valid class.\nUse `$class` to see available classes.",
+                    COLORS['error']
+                )
+            await ctx.send(embed=embed)
+            return
+
+        # Check if class is hidden and locked
+        class_data = CLASSES[class_key]
+        if class_data.get('hidden', False) and not rpg_data.get('chrono_weave_unlocked', False):
+            embed = create_embed(
+                "🔒 Class Locked",
+                f"The {class_data['name']} class is hidden and must be unlocked through special quests!",
+                COLORS['warning']
+            )
+            await ctx.send(embed=embed)
+            return
+
+        # Apply class selection
+        old_class = rpg_data.get('class')
+
+        # Update class
+        rpg_data['class'] = class_key
+
+        # Apply base stats (resetting to class base + level scaling)
+        for stat, value in class_data['base_stats'].items():
+            rpg_data[stat] = value
+
+        # Initialize starting skills
+        rpg_data['skills_learned'] = class_data.get('starting_skills', [])
+
+        # Recalculate HP and mana and other stats based on new class and current level
+        effective_stats = calculate_stats_with_equipment(rpg_data)
+        rpg_data['max_hp'] = effective_stats['max_hp']
+        rpg_data['max_mana'] = effective_stats['max_mana']
+        rpg_data['attack'] = effective_stats['attack']
+        rpg_data['defense'] = effective_stats['defense']
+
+        # Restore to full if changing class
+        if old_class != class_key:
+            rpg_data['hp'] = rpg_data['max_hp']
+            rpg_data['mana'] = rpg_data['max_mana']
+
+        # Save changes
+        update_user_data(user_id, user_data)
+
+        logger.info(f"User {ctx.author.id} selected class: {class_key} (was: {old_class})")
+
+        embed = create_embed(
+            "🎉 Class Selected!",
+            f"You are now a **{class_data['name']}**!\n\n"
+            f"{class_data['description']}\n\n"
+            f"**Your new stats:**\n"
+            f"❤️ HP: {rpg_data['hp']}/{rpg_data['max_hp']}\n"
+            f"💙 Mana: {rpg_data['mana']}/{rpg_data['max_mana']}\n"
+            f"⚔️ Attack: {rpg_data['attack']}\n"
+            f"🛡️ Defense: {rpg_data['defense']}",
+            COLORS['success']
+        )
+        await ctx.send(embed=embed)
+
+    @commands.command(name='battle', help='Battle monsters or other players')
+    async def battle(self, ctx, monster_name_or_target: str = None):
+        """Start a battle with a monster or player."""
+        if not is_module_enabled("rpg_games", ctx.guild.id):
+            return
+
+        user_id = str(ctx.author.id)
+        user_data = get_user_data(user_id)
+
+        if not user_data or 'rpg_data' not in user_data or user_data['rpg_data'] is None:
+            embed = create_embed(
+                "❌ No Character Found",
+                "You haven't started your adventure yet!\nUse `$start` to begin!",
+                COLORS['error']
+            )
+            await ctx.send(embed=embed)
+            return
+
+        rpg_data = user_data['rpg_data'] # rpg_data is now guaranteed to exist
+
+        if user_id in self.active_battles:
+            embed = create_embed(
+                "⚔️ Already in Battle",
+                "You're already in a battle! Finish your current battle first.",
+                COLORS['warning']
+            )
+            await ctx.send(embed=embed)
+            return
+        
+        if rpg_data['hp'] <= 0:
+            embed = create_embed(
+                "💀 No Health",
+                "You need to heal before battling!\nUse `$heal` to restore your health.",
+                COLORS['error']
+            )
+            await ctx.send(embed=embed)
+            return
+        
+        enemy = None
+        target_member = None
+
+        # Try to parse target as a Discord member (for PvP)
+        if monster_name_or_target:
+            try:
+                target_member = await commands.MemberConverter().convert(ctx, monster_name_or_target)
+            except commands.MemberNotFound:
+                pass # Not a member, proceed to monster lookup
+
+        if target_member and target_member != ctx.author:
+            # PvP battle
+            await ctx.invoke(self.bot.get_command('pvp'), target=target_member)
+            return
+        else:
+            # Battle with random monster or specific monster
+            if monster_name_or_target and not target_member: # User provided a string that wasn't a member
+                enemy_id = monster_name_or_target.lower().replace(" ", "_")
+                enemy_template = MONSTERS.get(enemy_id)
+                if not enemy_template:
+                    await ctx.send(embed=create_embed("❌ Unknown Monster", "That monster does not exist.", COLORS['error']))
+                    return
+                enemy = enemy_template.copy()
+            else: # Random monster
+                # Filter monsters by player level range and exclude world enders
+                available_monsters = [m for m_id, m in MONSTERS.items() if not m.get('world_ender') and m.get('min_level', 1) <= rpg_data['level'] and m.get('max_level', 999) >= rpg_data['level']]
+                if not available_monsters:
+                    await ctx.send(embed=create_embed("❌ No Monsters Available", "You've defeated all nearby monsters or are too high level for current areas!", COLORS['info']))
+                    return
+                enemy = random.choice(available_monsters).copy()
+            
+            # Scale enemy to player level (more robust scaling based on enemy's base stats)
+            # This scaling should be applied to the *copied* enemy data
+            level_diff = rpg_data['level'] - enemy.get('min_level', 1)
+            if level_diff > 0:
+                enemy['hp'] = int(enemy['hp'] * (1 + level_diff * 0.1))
+                enemy['max_hp'] = int(enemy['max_hp'] * (1 + level_diff * 0.1))
+                enemy['attack'] = int(enemy['attack'] * (1 + level_diff * 0.05))
+                enemy['defense'] = int(enemy['defense'] * (1 + level_diff * 0.03))
+                enemy['xp_reward'] = int(enemy['xp_reward'] * (1 + level_diff * 0.1))
+                enemy['coin_reward'] = int(enemy['coin_reward'] * (1 + level_diff * 0.08))
+
+            # World Ender Boss Warning
+            if enemy.get('world_ender', False):
+                warning_embed = create_embed(
+                    "🚨 WARNING: WORLD ENDER BOSS! 🚨",
+                    f"You are about to face the **{enemy['name']}**!\n\n"
+                    f"**{enemy.get('warning_message', 'This is an extremely dangerous foe.')}**\n\n"
+                    "**If you are defeated by this boss, you will lose ALL your progress:** your level, items, skills, and coins will be reset to default!\n\n"
+                    "Do you wish to proceed?",
+                    COLORS['error']
+                )
+                class ConfirmBossFight(discord.ui.View):
+                    def __init__(self):
+                        super().__init__(timeout=60)
+                        self.value = None # True for accept, False for decline
+                    @discord.ui.button(label="Proceed", style=discord.ButtonStyle.danger)
+                    async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
+                        if interaction.user.id != ctx.author.id:
+                            await interaction.response.send_message("This is not your challenge!", ephemeral=True)
+                            return
+                        self.value = True
+                        self.stop()
+                        await interaction.response.edit_message(content="Challenge accepted!", view=None, embed=None) # Acknowledge interaction
+                    @discord.ui.button(label="Flee", style=discord.ButtonStyle.secondary)
+                    async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
+                        if interaction.user.id != ctx.author.id:
+                            await interaction.response.send_message("This is not your challenge!", ephemeral=True)
+                            return
+                        self.value = False
+                        self.stop()
+                        await interaction.response.edit_message(content="Challenge declined.", view=None, embed=None) # Acknowledge interaction
+                
+                confirm_view = ConfirmBossFight()
+                warning_message = await ctx.send(embed=warning_embed, view=confirm_view)
+                await confirm_view.wait()
+
+                if confirm_view.value is None or not confirm_view.value:
+                    await warning_message.edit(embed=create_embed("↩️ Battle Canceled", "You decided not to engage the World Ender boss.", COLORS['info']), view=None)
+                    return
+
+        # Create combat view
+        # Send an initial message that we will edit later
+        initial_combat_message = await ctx.send(embed=create_embed("Starting Combat...", "Please wait...", COLORS['primary']))
+        combat_view = CombatView(self.bot, user_data, enemy, ctx, initial_combat_message)
+        self.active_battles[user_id] = combat_view
+        
+        # Initial display
+        embed = combat_view.create_combat_embed()
+        embed.description = f"A wild **{enemy['name']}** appears!"
+        await initial_combat_message.edit(embed=embed, view=combat_view)
+        
+        # The on_timeout callback handles removing from active_battles and stopping the view
+        # CombatView's end_combat also removes from active_battles
+
+    @commands.command(name='heal', help='Restore your health')
+    async def heal(self, ctx):
+        """Heal the player's HP."""
+        if not is_module_enabled("rpg_games", ctx.guild.id):
+            return
+
+        user_id = str(ctx.author.id)
+        user_data = get_user_data(user_id)
+
+        if not user_data or 'rpg_data' not in user_data or user_data['rpg_data'] is None:
+            embed = create_embed(
+                "❌ No Character Found",
+                "You haven't started your adventure yet!\nUse `$start` to begin!",
+                COLORS['error']
+            )
+            await ctx.send(embed=embed)
+            return
+
+        rpg_data = user_data['rpg_data'] # rpg_data is now guaranteed to exist
+        effective_stats = calculate_stats_with_equipment(rpg_data) # For max_hp
+
+        if rpg_data['hp'] >= effective_stats['max_hp']:
+            embed = create_embed(
+                "✅ Already at Full Health",
+                f"You're already at full health ({rpg_data['hp']}/{effective_stats['max_hp']} HP)!",
+                COLORS['success']
+            )
+            await ctx.send(embed=embed)
+            return
+
+        # Heal cost
+        heal_cost = 50
+        if rpg_data['coins'] < heal_cost:
+            embed = create_embed(
+                "❌ Not Enough Coins",
+                f"Healing costs **{heal_cost}** coins, but you only have **{format_number(rpg_data['coins'])}** coins!",
+                COLORS['error']
+            )
+            await ctx.send(embed=embed)
+            return
+
+        # Apply healing
+        old_hp = rpg_data['hp']
+        rpg_data['hp'] = effective_stats['max_hp'] # Heal to full
+        rpg_data['coins'] -= heal_cost
+
+        heal_amount = rpg_data['hp'] - old_hp
+
+        # Save changes
+        update_user_data(user_id, user_data)
+
+        embed = create_embed(
+            "💚 Healed!",
+            f"You restored **{heal_amount}** HP!\n\n"
+            f"❤️ HP: {rpg_data['hp']}/{rpg_data['max_hp']}\n"
+            f"💰 Coins: {format_number(rpg_data['coins'])} (-{heal_cost})",
+            COLORS['success']
+        )
+        await ctx.send(embed=embed)
+
+    @commands.command(name='pvp', help='Challenge another player to PvP')
+    async def pvp_battle(self, ctx, target: discord.Member):
+        """Start a PvP battle between two players."""
+        if not is_module_enabled("rpg_games", ctx.guild.id):
+            return
+            
+        user_id = str(ctx.author.id)
+        target_id = str(target.id)
+            
+        # Basic checks
+        if target == ctx.author:
+            embed = create_embed(
+                "❌ Invalid Target",
+                "You can't challenge yourself to PvP!",
+                COLORS['error']
+            )
+            await ctx.send(embed=embed)
+            return
+            
+        if user_id in self.active_battles or target_id in self.active_battles:
+            embed = create_embed(
+                "⚔️ Already in Battle",
+                "One of the players is already in a battle!",
+                COLORS['warning']
+            )
+            await ctx.send(embed=embed)
+            return
+            
+        # Check if both players have RPG data
+        user_data = get_user_data(user_id)
+        target_data = get_user_data(target_id)
+            
+        if not user_data or 'rpg_data' not in user_data or user_data['rpg_data'] is None:
+            embed = create_embed(
+                "❌ Not Started",
+                "You haven't started your adventure yet! Use `$start` to begin.",
+                COLORS['error']
+            )
+            await ctx.send(embed=embed)
+            return
+            
+        if not target_data or 'rpg_data' not in target_data or target_data['rpg_data'] is None:
+            embed = create_embed(
+                "❌ Target Not Started",
+                f"{target.mention} hasn't started their adventure yet!",
+                COLORS['error']
+            )
+            await ctx.send(embed=embed)
+            return
+            
+        # Check HP requirements
+        if user_data['rpg_data']['hp'] <= 1:
+            embed = create_embed(
+                "❌ Low Health",
+                "You need more than 1 HP to start PvP! Use `$heal` first.",
+                COLORS['error']
+            )
+            await ctx.send(embed=embed)
+            return
+            
+        if target_data['rpg_data']['hp'] <= 1:
+            embed = create_embed(
+                "❌ Target Low Health",
+                f"{target.mention} needs more than 1 HP to participate in PvP!",
+                COLORS['error']
+            )
+            await ctx.send(embed=embed)
+            return
+            
+        # Create PvP challenge view
+        class PvPChallengeView(discord.ui.View):
+            def __init__(self, challenger_id, challenged_id):
+                super().__init__(timeout=60)
+                self.accepted = False
+                self.challenger_id = challenger_id
+                self.challenged_id = challenged_id
+                
+            async def interaction_check(self, interaction: discord.Interaction) -> bool:
+                return str(interaction.user.id) == self.challenged_id
+
+            @discord.ui.button(label="Accept Challenge", style=discord.ButtonStyle.success)
+            async def accept_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+                self.accepted = True
+                self.stop()
+                await interaction.response.edit_message(content="Challenge accepted!", view=None, embed=None) # Acknowledge interaction
+
+            @discord.ui.button(label="Decline Challenge", style=discord.ButtonStyle.danger)
+            async def decline_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+                self.accepted = False
+                self.stop()
+                await interaction.response.edit_message(content="Challenge declined.", view=None, embed=None) # Acknowledge interaction
+        
+        # Send challenge
+        embed = create_embed(
+            "⚔️ PvP Challenge",
+            f"{ctx.author.mention} challenges {target.mention} to PvP battle!\n\n"
+            f"**{ctx.author.display_name}** (Level {user_data['rpg_data']['level']})\n"
+            f"HP: {user_data['rpg_data']['hp']}/{user_data['rpg_data']['max_hp']}\n"
+            f"Attack: {user_data['rpg_data']['attack']}\n\n"
+            f"**{target.display_name}** (Level {target_data['rpg_data']['level']})\n"
+            f"HP: {target_data['rpg_data']['hp']}/{target_data['rpg_data']['max_hp']}\n"
+            f"Attack: {target_data['rpg_data']['attack']}",
+            COLORS['primary']
+        )
+            
+        view = PvPChallengeView(user_id, target_id)
+        challenge_message = await ctx.send(embed=embed, view=view)
+        await view.wait() # Wait for response
+
+        if view.accepted:
+            logger.info(f"PvP challenge accepted: {user_id} vs {target_id}")
+            # Start PvP battle
+            # For PvP, the 'enemy_data' in CombatView will be the target_data
+            # We need to ensure CombatView can handle two player datas
+            # For simplicity, we'll map target_data to enemy_data structure for CombatView
+            pvp_enemy_data = {
+                "name": target.display_name,
+                "hp": target_data['rpg_data']['hp'],
+                "max_hp": target_data['rpg_data']['max_hp'],
+                "attack": target_data['rpg_data']['attack'],
+                "defense": target_data['rpg_data']['defense'],
+                "element": "neutral", # PvP players are neutral element for now
+                "abilities": [] # PvP players use skills via player commands, not monster abilities
+            }
+            
+            # Send an initial message that we will edit later
+            initial_pvp_message = await ctx.send(embed=create_embed("Starting PvP Combat...", "Please wait...", COLORS['primary']))
+            pvp_combat_view = CombatView(self.bot, user_data, pvp_enemy_data, ctx, initial_pvp_message, combat_type="pvp")
+            
+            # Store opponent's full data in CombatView for skill/item targeting (if multi-player combat is implemented)
+            # For now, CombatView assumes player vs. one enemy. For true PvP, CombatView needs to manage two player_data objects.
+            # This is a simplification for the current CombatView structure.
+            
+            self.active_battles[user_id] = pvp_combat_view
+            # Also register target as active in battle to prevent them from starting new ones
+            self.active_battles[target_id] = pvp_combat_view # Both players linked to the same combat view instance
+
+            embed = pvp_combat_view.create_combat_embed()
+            embed.title = "⚔️ PvP Battle"
+            embed.description = f"{ctx.author.mention} vs {target.mention}"
+            await initial_pvp_message.edit(embed=embed, view=pvp_combat_view)
+        else:
+            logger.info(f"PvP challenge declined or timed out: {user_id} vs {target_id}")
+            await challenge_message.edit(embed=create_embed("🚫 Challenge Timed Out", f"The PvP challenge from {ctx.author.mention} to {target.mention} timed out.", COLORS['warning']), view=None)
+
+    @commands.command(name='trade', help='Trade items with another player')
+    async def trade_items(self, ctx, target: discord.Member):
+        """Start a trade with another player."""
+        if not is_module_enabled("rpg_games", ctx.guild.id):
+            return
+            
+        user_id = str(ctx.author.id)
+        target_id = str(target.id)
+            
+        # Basic checks
+        if target == ctx.author:
+            embed = create_embed(
+                "❌ Invalid Target",
+                "You can't trade with yourself!",
+                COLORS['error']
+            )
+            await ctx.send(embed=embed)
+            return
+            
+        # Check if both players have RPG data
+        player_a_data = get_user_data(user_id)
+        player_b_data = get_user_data(target_id)
+            
+        if not player_a_data or 'rpg_data' not in player_a_data or player_a_data['rpg_data'] is None:
+            embed = create_embed(
+                "❌ Not Started",
+                "You haven't started your adventure yet! Use `$start` to begin.",
+                COLORS['error']
+            )
+            await ctx.send(embed=embed)
+            return
+            
+        if not player_b_data or 'rpg_data' not in player_b_data or player_b_data['rpg_data'] is None:
+            embed = create_embed(
+                "❌ Target Not Started",
+                f"{target.mention} hasn't started their adventure yet!",
+                COLORS['error']
+            )
+            await ctx.send(embed=embed)
+            return
+            
+        # Check if players are busy (in battle, dungeon, or another trade)
+        if user_id in self.active_battles or target_id in self.active_battles:
+            embed = create_embed("⚔️ Busy", "One of the players is currently in a battle!", COLORS['warning'])
+            await ctx.send(embed=embed)
+            return
+        if user_id in self.active_dungeons or target_id in self.active_dungeons:
+            embed = create_embed("🏰 Busy", "One of the players is currently in a dungeon!", COLORS['warning'])
+            await ctx.send(embed=embed)
+            return
+        if user_id in self.active_trades or target_id in self.active_trades:
+            embed = create_embed("🔄 Busy", "One of the players is already in a trade!", COLORS['warning'])
+            await ctx.send(embed=embed)
+            return
+            
+        # Create trade request
+        class TradeRequestView(discord.ui.View):
+            def __init__(self, requester_id, target_id):
+                super().__init__(timeout=60)
+                self.accepted = False
+                self.requester_id = requester_id
+                self.target_id = target_id
+            
+            async def interaction_check(self, interaction: discord.Interaction) -> bool:
+                return str(interaction.user.id) == self.target_id
+
+            @discord.ui.button(label="Accept Trade", style=discord.ButtonStyle.success)
+            async def accept_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+                self.accepted = True
+                self.stop()
+                await interaction.response.edit_message(content="Trade request accepted!", view=None, embed=None) # Acknowledge interaction
+            
+            @discord.ui.button(label="Decline Trade", style=discord.ButtonStyle.danger)
+            async def decline_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+                self.accepted = False
+                self.stop()
+                await interaction.response.edit_message(content="Trade request declined.", view=None, embed=None) # Acknowledge interaction
+        
+        # Send trade request
+        embed = create_embed(
+            "🔄 Trade Request",
+            f"{ctx.author.mention} wants to trade with {target.mention}!\n\n"
+            f"Use the buttons below to accept or decline the trade.",
+            COLORS['primary']
+        )
+            
+        request_view = TradeRequestView(user_id, target_id)
+        request_message = await ctx.send(embed=embed, view=request_view)
+        await request_view.wait() # Wait for response
+
+        if request_view.accepted:
+            logger.info(f"Trade request accepted: {user_id} vs {target_id}")
+            trade_id = f"trade_{user_id}_{target_id}_{int(datetime.now().timestamp())}"
+            
+            initial_trade_message = await ctx.send(embed=create_embed("Setting up trade...", "Please wait...", COLORS['primary']))
+            trade_view = TradeView(ctx, player_a_data, player_b_data, trade_id, initial_trade_message)
+            
+            self.active_trades[trade_id] = trade_view
+            self.active_trades[user_id] = trade_id # Map user IDs to trade ID for quick lookup
+            self.active_trades[target_id] = trade_id
+            
+            embed = trade_view.create_trade_embed()
+            await initial_trade_message.edit(embed=embed, view=trade_view)
+        else:
+            logger.info(f"Trade request declined or timed out: {user_id} vs {target_id}")
+            await request_message.edit(embed=create_embed("🚫 Trade Request Timed Out", f"The trade request from {ctx.author.mention} to {target.mention} timed out or was declined.", COLORS['warning']), view=None)
+
+    # --- Trade Subcommands (for adding/removing items/coins) ---
+    @commands.group(name='trade', invoke_without_command=True)
+    async def trade_group(self, ctx):
+        if ctx.invoked_subcommand is None:
+            # If just !trade is called, show help or current trade
+            user_id = str(ctx.author.id)
+            if user_id in self.active_trades and isinstance(self.active_trades[user_id], str): # Check if user is in an active trade
+                trade_id = self.active_trades[user_id]
+                trade_view = self.active_trades[trade_id] # Get the TradeView instance
+                if trade_view:
+                    await ctx.send(embed=trade_view.create_trade_embed(), view=trade_view)
+                else:
+                    await ctx.send(embed=create_embed("ℹ️ Trade Help", "You are in a trade. Use `!trade additem`, `!trade removeitem`, `!trade addcoins`, `!trade removecoins` to manage your offer.", COLORS['info']))
+            else:
+                await ctx.send(embed=create_embed("ℹ️ Trade Help", "Use `!trade <@user>` to start a trade. Once in a trade, use `!trade additem <item> [qty]`, etc.", COLORS['info']))
+
+    @trade_group.command(name='additem')
+    async def trade_add_item(self, ctx, item_name: str, quantity: int = 1):
+        user_id = str(ctx.author.id)
+        if user_id not in self.active_trades or not isinstance(self.active_trades[user_id], str):
+            await ctx.send(embed=create_embed("❌ Not in Trade", "You are not currently in a trade.", COLORS['error']))
+            return
+
+        trade_id = self.active_trades[user_id]
+        trade_view = self.active_trades[trade_id] # This is the TradeView instance
+        
+        if trade_view.player_a_confirmed or trade_view.player_b_confirmed:
+            await ctx.send(embed=create_embed("❌ Offer Confirmed", "You cannot modify your offer after confirming. Please unconfirm first.", COLORS['warning']))
+            return
+
+        item_id = None
+        for k, v in ITEMS.items():
+            if v['name'].lower() == item_name.lower() or k == item_name.lower():
+                item_id = k
+                break
+        
+        if not item_id:
+            await ctx.send(embed=create_embed("❌ Item Not Found", "Could not find that item.", COLORS['error']))
+            return
+        if quantity <= 0:
+            await ctx.send(embed=create_embed("❌ Invalid Quantity", "Quantity must be positive.", COLORS['error']))
+            return
+
+        player_data = trade_view.player_a_data if user_id == trade_view.player_a_id else trade_view.player_b_data
+        player_offer = trade_view.player_a_offer if user_id == trade_view.player_a_id else trade_view.player_b_offer
+
+        # Check if player has enough items
+        if player_data['rpg_data']['inventory'].get(item_id, 0) < quantity:
+            await ctx.send(embed=create_embed("❌ Not Enough Items", f"You only have {player_data['rpg_data']['inventory'].get(item_id, 0)} of {ITEMS[item_id]['name']}.", COLORS['error']))
+            return
+
+        # Move item from player's inventory to offer
+        player_data['rpg_data']['inventory'][item_id] -= quantity
+        if player_data['rpg_data']['inventory'][item_id] == 0:
+            del player_data['rpg_data']['inventory'][item_id]
+        
+        player_offer['items'][item_id] = player_offer['items'].get(item_id, 0) + quantity
+        
+        await ctx.send(embed=create_embed("✅ Item Added", f"Added {quantity}x {ITEMS[item_id]['name']} to your offer.", COLORS['success']))
+        await trade_view.initial_message.edit(embed=trade_view.create_trade_embed(), view=trade_view)
+        # Reset confirmations
+        trade_view.player_a_confirmed = False
+        trade_view.player_b_confirmed = False
+        trade_view.update_buttons_state()
+
+
+    @trade_group.command(name='removeitem')
+    async def trade_remove_item(self, ctx, item_name: str, quantity: int = 1):
+        user_id = str(ctx.author.id)
+        if user_id not in self.active_trades or not isinstance(self.active_trades[user_id], str):
+            await ctx.send(embed=create_embed("❌ Not in Trade", "You are not currently in a trade.", COLORS['error']))
+            return
+
+        trade_id = self.active_trades[user_id]
+        trade_view = self.active_trades[trade_id]
+        
+        if trade_view.player_a_confirmed or trade_view.player_b_confirmed:
+            await ctx.send(embed=create_embed("❌ Offer Confirmed", "You cannot modify your offer after confirming. Please unconfirm first.", COLORS['warning']))
+            return
+
+        item_id = None
+        for k, v in ITEMS.items():
+            if v['name'].lower() == item_name.lower() or k == item_name.lower():
+                item_id = k
+                break
+        
+        if not item_id:
+            await ctx.send(embed=create_embed("❌ Item Not Found", "Could not find that item in your offer.", COLORS['error']))
+            return
+        if quantity <= 0:
+            await ctx.send(embed=create_embed("❌ Invalid Quantity", "Quantity must be positive.", COLORS['error']))
+            return
+
+        player_data = trade_view.player_a_data if user_id == trade_view.player_a_id else trade_view.player_b_data
+        player_offer = trade_view.player_a_offer if user_id == trade_view.player_a_id else trade_view.player_b_offer
+
+        # Check if item is in offer
+        if player_offer['items'].get(item_id, 0) < quantity:
+            await ctx.send(embed=create_embed("❌ Not Enough in Offer", f"You only have {player_offer['items'].get(item_id, 0)} of {ITEMS[item_id]['name']} in your offer.", COLORS['error']))
+            return
+
+        # Move item from offer back to player's inventory
+        player_offer['items'][item_id] -= quantity
+        if player_offer['items'][item_id] == 0:
+            del player_offer['items'][item_id]
+        
+        player_data['rpg_data']['inventory'][item_id] = player_data['rpg_data']['inventory'].get(item_id, 0) + quantity
+        
+        await ctx.send(embed=create_embed("✅ Item Removed", f"Removed {quantity}x {ITEMS[item_id]['name']} from your offer.", COLORS['success']))
+        await trade_view.initial_message.edit(embed=trade_view.create_trade_embed(), view=trade_view)
+        # Reset confirmations
+        trade_view.player_a_confirmed = False
+        trade_view.player_b_confirmed = False
+        trade_view.update_buttons_state()
+
+    @trade_group.command(name='addcoins')
+    async def trade_add_coins(self, ctx, amount: int):
+        user_id = str(ctx.author.id)
+        if user_id not in self.active_trades or not isinstance(self.active_trades[user_id], str):
+            await ctx.send(embed=create_embed("❌ Not in Trade", "You are not currently in a trade.", COLORS['error']))
+            return
+
+        trade_id = self.active_trades[user_id]
+        trade_view = self.active_trades[trade_id]
+        
+        if trade_view.player_a_confirmed or trade_view.player_b_confirmed:
+            await ctx.send(embed=create_embed("❌ Offer Confirmed", "You cannot modify your offer after confirming. Please unconfirm first.", COLORS['warning']))
+            return
+
+        if amount <= 0:
+            await ctx.send(embed=create_embed("❌ Invalid Amount", "Amount must be positive.", COLORS['error']))
+            return
+
+        player_data = trade_view.player_a_data if user_id == trade_view.player_a_id else trade_view.player_b_data
+        player_offer = trade_view.player_a_offer if user_id == trade_view.player_a_id else trade_view.player_b_offer
+
+        # Check if player has enough coins
+        if player_data['rpg_data']['coins'] < amount:
+            await ctx.send(embed=create_embed("❌ Not Enough Coins", f"You only have {format_number(player_data['rpg_data']['coins'])} coins.", COLORS['error']))
+            return
+
+        # Move coins from player's balance to offer
+        player_data['rpg_data']['coins'] -= amount
+        player_offer['coins'] += amount
+        
+        await ctx.send(embed=create_embed("✅ Coins Added", f"Added {format_number(amount)} coins to your offer.", COLORS['success']))
+        await trade_view.initial_message.edit(embed=trade_view.create_trade_embed(), view=trade_view)
+        # Reset confirmations
+        trade_view.player_a_confirmed = False
+        trade_view.player_b_confirmed = False
+        trade_view.update_buttons_state()
+
+    @trade_group.command(name='removecoins')
+    async def trade_remove_coins(self, ctx, amount: int):
+        user_id = str(ctx.author.id)
+        if user_id not in self.active_trades or not isinstance(self.active_trades[user_id], str):
+            await ctx.send(embed=create_embed("❌ Not in Trade", "You are not currently in a trade.", COLORS['error']))
+            return
+
+        trade_id = self.active_trades[user_id]
+        trade_view = self.active_trades[trade_id]
+        
+        if trade_view.player_a_confirmed or trade_view.player_b_confirmed:
+            await ctx.send(embed=create_embed("❌ Offer Confirmed", "You cannot modify your offer after confirming. Please unconfirm first.", COLORS['warning']))
+            return
+
+        if amount <= 0:
+            await ctx.send(embed=create_embed("❌ Invalid Amount", "Amount must be positive.", COLORS['error']))
+            return
+
+        player_data = trade_view.player_a_data if user_id == trade_view.player_a_id else trade_view.player_b_data
+        player_offer = trade_view.player_a_offer if user_id == trade_view.player_a_id else trade_view.player_b_offer
+
+        # Check if coins are in offer
+        if player_offer['coins'] < amount:
+            await ctx.send(embed=create_embed("❌ Not Enough in Offer", f"You only have {format_number(player_offer['coins'])} coins in your offer.", COLORS['error']))
+            return
+
+        # Move coins from offer back to player's balance
+        player_offer['coins'] -= amount
+        player_data['rpg_data']['coins'] += amount
+        
+        await ctx.send(embed=create_embed("✅ Coins Removed", f"Removed {format_number(amount)} coins from your offer.", COLORS['success']))
+        await trade_view.initial_message.edit(embed=trade_view.create_trade_embed(), view=trade_view)
+        # Reset confirmations
+        trade_view.player_a_confirmed = False
+        trade_view.player_b_confirmed = False
+        trade_view.update_buttons_state()
+
+    # --- Other RPG Commands (Placeholders for now) ---
+    @commands.command(name='inventory', aliases=['inv'], help='View your inventory')
+    async def inventory(self, ctx):
+        user_id = str(ctx.author.id)
+        user_data = get_user_data(user_id)
+        if not user_data or 'rpg_data' not in user_data or user_data['rpg_data'] is None:
+            await ctx.send(embed=create_embed("❌ No Character", "You need to `$start` your adventure first!", COLORS['error']))
+            return
+
+        rpg_data = user_data['rpg_data']
+        inventory = rpg_data.get('inventory', {})
+        equipped = rpg_data.get('equipped', {})
+
+        embed = create_embed("🎒 Your Inventory", "", COLORS['primary'])
+        
+        equipped_items_text = []
+        for slot, item_id in equipped.items():
+            item_info = ITEMS.get(item_id)
+            if item_info:
+                equipped_items_text.append(f"**{slot.title()}:** {item_info['name']}")
+        
+        embed.add_field(name="🛡️ Equipped", value="\n".join(equipped_items_text) if equipped_items_text else "None", inline=False)
+
+        if not inventory:
+            embed.add_field(name="Items", value="Your inventory is empty!", inline=False)
+        else:
+            items_by_type = {"weapon": [], "armor": [], "consumable": [], "material": [], "accessory": []}
+            for item_id, qty in inventory.items():
+                item_info = ITEMS.get(item_id)
+                if item_info:
+                    item_type = item_info.get('type', 'unknown')
+                    if item_type in items_by_type:
+                        items_by_type[item_type].append(f"{item_info['name']} x{qty}")
+                    else:
+                        items_by_type['accessory'].append(f"{item_info['name']} x{qty}") # Fallback for accessories
+
+            for item_type, item_list in items_by_type.items():
+                if item_list:
+                    embed.add_field(name=item_type.title(), value="\n".join(item_list), inline=True)
+
+        await ctx.send(embed=embed)
+
+    @commands.command(name='equip', help='Equip an item from your inventory')
+    async def equip_item(self, ctx, *, item_name: str):
+        user_id = str(ctx.author.id)
+        user_data = get_user_data(user_id)
+        if not user_data or 'rpg_data' not in user_data or user_data['rpg_data'] is None:
+            await ctx.send(embed=create_embed("❌ No Character", "You need to `$start` your adventure first!", COLORS['error']))
+            return
+
+        rpg_data = user_data['rpg_data']
+        
+        item_id_to_equip = None
+        for k, v in ITEMS.items():
+            if v['name'].lower() == item_name.lower() or k == item_name.lower():
+                item_id_to_equip = k
+                break
+        
+        if not item_id_to_equip or item_id_to_equip not in ITEMS:
+            await ctx.send(embed=create_embed("❌ Item Not Found", "Could not find that item in your inventory or game data.", COLORS['error']))
+            return
+        
+        item_info = ITEMS[item_id_to_equip]
+
+        if item_id_to_equip not in rpg_data.get('inventory', {}) or rpg_data['inventory'].get(item_id_to_equip, 0) < 1:
+            await ctx.send(embed=create_embed("❌ Item Not Owned", f"You don't have **{item_info['name']}** in your inventory.", COLORS['error']))
+            return
+        
+        item_type = item_info.get('type')
+        item_slot = item_info.get('slot')
+
+        if item_type not in ['weapon', 'armor', 'accessory']:
+            await ctx.send(embed=create_embed("❌ Cannot Equip", f"You can only equip weapons, armor, and accessories. **{item_info['name']}** is a {item_type}.", COLORS['error']))
+            return
+        
+        # Determine slot for equipping
+        slot = item_slot if item_slot else item_type # Use specific slot if defined, else general type
+        
+        current_equipped = rpg_data['equipped'].get(slot)
+
+        # Remove from inventory
+        rpg_data['inventory'][item_id_to_equip] -= 1
+        if rpg_data['inventory'][item_id_to_equip] == 0:
+            del rpg_data['inventory'][item_id_to_equip]
+
+        # Unequip old item if any
+        if current_equipped:
+            rpg_data['inventory'][current_equipped] = rpg_data['inventory'].get(current_equipped, 0) + 1 # Add old item back to inventory
+            
+        # Equip new item
+        rpg_data['equipped'][slot] = item_id_to_equip
+
+        # Recalculate stats after equipping
+        effective_stats = calculate_stats_with_equipment(rpg_data)
+        rpg_data['attack'] = effective_stats['attack']
+        rpg_data['defense'] = effective_stats['defense']
+        rpg_data['max_hp'] = effective_stats['max_hp']
+        rpg_data['max_mana'] = effective_stats['max_mana']
+        rpg_data['hp'] = min(rpg_data['hp'], rpg_data['max_hp']) # Cap current HP if max_hp decreased
+        rpg_data['mana'] = min(rpg_data['mana'], rpg_data['max_mana']) # Cap current Mana
+
+        update_user_data(user_id, user_data)
+
+        embed = create_embed(
+            "✅ Item Equipped!",
+            f"You have equipped **{item_info['name']}** in your {slot} slot.\n" +
+            (f"Unequipped **{ITEMS[current_equipped]['name']}**." if current_equipped else ""),
+            COLORS['success']
+        )
+        await ctx.send(embed=embed)
+        logger.info(f"User {user_id} equipped {item_id_to_equip}.")
+
+
+    @commands.command(name='rarity', help='Check item details & rarity')
+    async def rarity(self, ctx, *, item_name: str):
+        item_id = None
+        for k, v in ITEMS.items():
+            if v['name'].lower() == item_name.lower() or k == item_name.lower():
+                item_id = k
+                break
+        
+        if not item_id or item_id not in ITEMS:
+            await ctx.send(embed=create_embed("❌ Item Not Found", "Could not find that item in game data.", COLORS['error']))
+            return
+        
+        item_info = ITEMS[item_id]
+        rarity_info = RARITIES.get(item_info.get('rarity', 'common'))
+
+        embed = create_embed(
+            f"✨ {item_info['name']} Details",
+            item_info.get('description', 'No description available.'),
+            rarity_info.get('color', COLORS['primary'])
+        )
+        embed.add_field(name="Type", value=item_info.get('type', 'Unknown').title(), inline=True)
+        embed.add_field(name="Rarity", value=rarity_info.get('name', 'Common'), inline=True)
+        embed.add_field(name="Value", value=f"💰 {format_number(item_info.get('value', 0))} coins", inline=True)
+        
+        if item_info.get('damage'):
+            embed.add_field(name="Damage", value=item_info['damage'], inline=True)
+        if item_info.get('defense'):
+            embed.add_field(name="Defense", value=item_info['defense'], inline=True)
+        if item_info.get('element'):
+            embed.add_field(name="Element", value=item_info['element'].title(), inline=True)
+        
+        effect_desc = item_info.get('effect', {}).get('description')
+        if effect_desc:
+            embed.add_field(name="Effect", value=effect_desc, inline=False)
+
+        await ctx.send(embed=embed)
+
+    @commands.command(name='use', help='Use a consumable item from your inventory (out of combat)')
+    async def use_item_out_of_combat(self, ctx, *, item_name: str):
+        user_id = str(ctx.author.id)
+        user_data = get_user_data(user_id)
+        if not user_data or 'rpg_data' not in user_data or user_data['rpg_data'] is None:
+            await ctx.send(embed=create_embed("❌ No Character", "You need to `$start` your adventure first!", COLORS['error']))
+            return
+
+        rpg_data = user_data['rpg_data']
+        
+        item_id_to_use = None
+        for k, v in ITEMS.items():
+            if v['name'].lower() == item_name.lower() or k == item_name.lower():
+                item_id_to_use = k
+                break
+        
+        if not item_id_to_use or item_id_to_use not in ITEMS:
+            await ctx.send(embed=create_embed("❌ Item Not Found", "Could not find that item.", COLORS['error']))
+            return
+        
+        item_info = ITEMS[item_id_to_use]
+
+        if item_info.get('type') != 'consumable':
+            await ctx.send(embed=create_embed("❌ Not Consumable", f"**{item_info['name']}** is not a consumable item.", COLORS['error']))
+            return
+
+        if item_id_to_use not in rpg_data.get('inventory', {}) or rpg_data['inventory'].get(item_id_to_use, 0) < 1:
+            await ctx.send(embed=create_embed("❌ Item Not Owned", f"You don't have **{item_info['name']}** in your inventory.", COLORS['error']))
+            return
+        
+        # Consume item
+        rpg_data['inventory'][item_id_to_use] -= 1
+        if rpg_data['inventory'][item_id_to_use] == 0:
+            del rpg_data['inventory'][item_id_to_use]
+
+        # Apply item effect
+        effect_details = item_info.get('effect', {})
+        effect_type = effect_details.get('type')
+        
+        response_msg = f"You used **{item_info['name']}**."
+        
+        if effect_type == 'heal_hp':
+            heal_amount = effect_details.get('amount', 0)
+            rpg_data['hp'] = min(rpg_data['max_hp'], rpg_data['hp'] + heal_amount)
+            response_msg += f"\n💖 Restored {heal_amount} HP. Current HP: {rpg_data['hp']}/{rpg_data['max_hp']}."
+        elif effect_type == 'heal_mana':
+            mana_amount = effect_details.get('amount', 0)
+            rpg_data['mana'] = min(rpg_data['max_mana'], rpg_data['mana'] + mana_amount)
+            response_msg += f"\n🔵 Restored {mana_amount} Mana. Current Mana: {rpg_data['mana']}/{rpg_data['max_mana']}."
+        elif effect_type == 'gain_xp':
+            xp_gain = effect_details.get('amount', 0)
+            rpg_data['xp'] += xp_gain
+            old_level = rpg_data['level']
+            new_level = calculate_level_from_xp(rpg_data['xp'])
+            if new_level > old_level:
+                rpg_data['level'] = new_level
+                # Re-calculate stats based on new level
+                effective_stats_after_level = calculate_stats_with_equipment(rpg_data)
+                rpg_data.update(effective_stats_after_level) # Update all stats
+                rpg_data['hp'] = rpg_data['max_hp'] # Full heal on level up
+                rpg_data['mana'] = rpg_data['max_mana']
+                response_msg += f"\n✨ Gained {xp_gain} XP. 🎉 **LEVEL UP!** You are now level {new_level}!"
+            else:
+                response_msg += f"\n✨ Gained {xp_gain} XP. Current XP: {rpg_data['xp']}."
+        elif effect_type == 'status':
+            status_effect_id = effect_details.get('status_effect')
+            duration = effect_details.get('duration', 1)
+            # For out-of-combat, apply to player's active_status_effects
+            # This needs more sophisticated handling if effects have combat-only vs. persistent effects
+            # For simplicity, we'll just add a message for now.
+            response_msg += f"\n✨ Applied {STATUS_EFFECTS.get(status_effect_id, {}).get('name', status_effect_id)} effect (duration: {duration} turns)."
+        else:
+            response_msg += "\n(No immediate effect visible or implemented yet.)"
+
+        update_user_data(user_id, user_data)
+        await ctx.send(embed=create_embed("✅ Item Used", response_msg, COLORS['success']))
+        logger.info(f"User {user_id} used item {item_id_to_use} out of combat.")
+
+
+    @commands.command(name='buy', help='Purchase an item from the shop')
+    async def buy_item(self, ctx, item_name: str, quantity: int = 1):
+        embed = create_embed("🛒 Shop Under Development", "The marketplace is still being built! Soon you'll be able to purchase a wide array of items. Check back later!", COLORS['info'])
+        await ctx.send(embed=embed)
+
+    @commands.command(name='sell', help='Sell an item from your inventory')
+    async def sell_item(self, ctx, item_name: str, quantity: int = 1):
+        embed = create_embed("💰 Selling Under Development", "A robust selling system is coming soon! For now, hold onto your valuable loot.", COLORS['info'])
+        await ctx.send(embed=embed)
+
+    @commands.command(name='shop', help='Browse the item marketplace')
+    async def shop(self, ctx, category: str = None):
+        user_id = str(ctx.author.id)
+        user_data = get_user_data(user_id)
+        if not user_data or 'rpg_data' not in user_data or user_data['rpg_data'] is None:
+            await ctx.send(embed=create_embed("❌ No Character", "You need to `$start` your adventure first!", COLORS['error']))
+            return
+
+        class ShopView(discord.ui.View):
+            def __init__(self, ctx, initial_category=None):
+                super().__init__(timeout=180)
+                self.ctx = ctx
+                self.current_category = initial_category
+                
+                category_options = [
+                    discord.SelectOption(label="Weapons", value="weapon", emoji="⚔️"),
+                    discord.SelectOption(label="Armor & Accessories", value="armor", emoji="🛡️"), # Combines armor and accessory for display
+                    discord.SelectOption(label="Consumables", value="consumable", emoji="🧪"),
+                    discord.SelectOption(label="Crafting Materials", value="material", emoji="🌿"),
+                    discord.SelectOption(label="Special Items", value="special", emoji="🌟")
+                ]
+                self.add_item(discord.ui.Select(placeholder="Browse by Category", options=category_options, custom_id="shop_category_select"))
+
+                # Request from Owner Button (only visible to non-owner)
+                if str(ctx.author.id) != str(ctx.cog.OWNER_ID):
+                    self.add_item(discord.ui.Button(label="Request Special Item from Owner", style=discord.ButtonStyle.blurple, custom_id="request_owner_item"))
+
+            async def interaction_check(self, interaction: discord.Interaction) -> bool:
+                return interaction.user == self.ctx.author
+
+            @discord.ui.button(label="Close Shop", style=discord.ButtonStyle.red, custom_id="shop_close_button")
+            async def close_shop(self, interaction: discord.Interaction, button: discord.ui.Button):
+                await interaction.response.edit_message(content="Shop closed.", view=None, embed=None)
+                self.stop()
+
+            @discord.ui.select(custom_id="shop_category_select")
+            async def select_category(self, interaction: discord.Interaction, select: discord.ui.Select):
+                self.current_category = select.values[0]
+                await self.update_shop_display(interaction)
+
+            @discord.ui.button(custom_id="request_owner_item")
+            async def request_owner_item(self, interaction: discord.Interaction, button: discord.ui.Button):
+                # This button should only be visible/functional for non-owners (checked in __init__)
+                embed = create_embed(
+                    "🛍️ Special Item Request",
+                    f"To request a special item, please DM <@{self.ctx.cog.OWNER_ID}> ({self.ctx.cog.OWNER_ID}) with details of what you need!\n"
+                    "Be specific about the item name and quantity.",
+                    COLORS['info']
+                )
+                await interaction.response.send_message(embed=embed, ephemeral=True)
+
+            async def update_shop_display(self, interaction: discord.Interaction):
+                embed = create_embed(f"🛒 Shop: {self.current_category.replace('_', ' ').title()}", "", COLORS['primary'])
+                
+                shop_items = []
+                if self.current_category == "armor": # Special handling for combined armor/accessory
+                    shop_items = [item for item_id, item in ITEMS.items() if (item.get('type') == 'armor' or item.get('type') == 'accessory') and item.get('value', 0) > 0]
+                else:
+                    shop_items = [item for item_id, item in ITEMS.items() if item.get('type') == self.current_category and item.get('value', 0) > 0]
+                
+                if shop_items:
+                    items_desc = []
+                    for item in shop_items:
+                        items_desc.append(f"**{item['name']}** - 💰 {format_number(item['value'])} coins")
+                    embed.description = "\n".join(items_desc)
+                else:
+                    embed.description = "No items in this category currently."
+                
+                await interaction.response.edit_message(embed=embed, view=self)
+
+
+        initial_embed = create_embed("🛒 Welcome to the Shop!", "Select a category to browse items.", COLORS['primary'])
+        shop_view = ShopView(ctx, initial_category=category)
+        
+        message = await ctx.send(embed=initial_embed, view=shop_view)
+        if category: # If a category was specified, update immediately
+            shop_view.current_category = category.lower().replace(" ", "_")
+            # This dummy interaction is a workaround. A better way would be to call update_shop_display directly
+            # and then edit the message, or have the view handle its initial display logic.
+            # For now, it will edit the message after the initial send.
+            # await shop_view.update_shop_display(discord.Interaction(data={}, channel=ctx.channel, guild=ctx.guild, user=ctx.author, client=self.bot, id=0, type=discord.InteractionType.component, version=1))
+            # Instead of dummy interaction, we can call the method directly and pass the message
+            await shop_view.update_shop_display_direct(message)
+
+    # Helper method for shop view to update message directly without interaction response
+    async def update_shop_display_direct(self, message: discord.Message):
+        embed = create_embed(f"🛒 Shop: {self.current_category.replace('_', ' ').title()}", "", COLORS['primary'])
+        
+        shop_items = []
+        if self.current_category == "armor":
+            shop_items = [item for item_id, item in ITEMS.items() if (item.get('type') == 'armor' or item.get('type') == 'accessory') and item.get('value', 0) > 0]
+        else:
+            shop_items = [item for item_id, item in ITEMS.items() if item.get('type') == self.current_category and item.get('value', 0) > 0]
+        
+        if shop_items:
+            items_desc = []
+            for item in shop_items:
+                items_desc.append(f"**{item['name']}** - 💰 {format_number(item['value'])} coins")
+            embed.description = "\n".join(items_desc)
+        else:
+            embed.description = "No items in this category currently."
+        
+        await message.edit(embed=embed, view=self)
+
+
+    @commands.command(name='skills', help='View your class skills and learn new ones.')
+    async def view_skills(self, ctx):
+        user_id = str(ctx.author.id)
+        user_data = get_user_data(user_id)
+        if not user_data or 'rpg_data' not in user_data or user_data['rpg_data'] is None:
+            await ctx.send(embed=create_embed("❌ No Character", "You need to `$start` your adventure first!", COLORS['error']))
+            return
+
+        rpg_data = user_data['rpg_data']
+        player_class = rpg_data.get('class')
+
+        if not player_class:
+            await ctx.send(embed=create_embed("❌ No Class", "You need to choose a class first with `$class`!", COLORS['error']))
+            return
+
+        embed = create_embed(f"🔮 {CLASSES[player_class]['name']} Skills", "", COLORS['primary'])
+        
+        learned_skills = rpg_data.get('skills_learned', [])
+        class_skills_data = SKILLS.get(player_class, {})
+
+        if learned_skills:
+            learned_text = []
+            for skill_id in learned_skills:
+                skill_info = class_skills_data.get(skill_id)
+                if skill_info:
+                    learned_text.append(f"**{skill_info['name']}**: {skill_info['description']} (Mana: {skill_info['mana_cost']}, Cooldown: {skill_info['cooldown']} turns)")
+            embed.add_field(name="Learned Skills", value="\n".join(learned_text), inline=False)
+        else:
+            embed.add_field(name="Learned Skills", value="You haven't learned any skills yet!", inline=False)
+
+        # Show learnable skills
+        learnable_text = []
+        for skill_id, skill_info in class_skills_data.items():
+            if skill_id not in learned_skills:
+                level_req = skill_info.get('level_req', 0)
+                prereq_skill = skill_info.get('prerequisite_skill')
+                
+                can_learn = True
+                reasons = []
+
+                if rpg_data['level'] < level_req:
+                    can_learn = False
+                    reasons.append(f"Requires Level {level_req}")
+                if prereq_skill and prereq_skill not in learned_skills:
+                    can_learn = False
+                    reasons.append(f"Requires '{class_skills_data.get(prereq_skill, {}).get('name', prereq_skill)}'") # Use class_skills_data for prereq name
+                
+                status = "✅ Learnable" if can_learn else f"❌ ({', '.join(reasons)})"
+                learnable_text.append(f"**{skill_info['name']}**: {skill_info['description']} - {status}")
+        
+        if learnable_text:
+            embed.add_field(name="Learnable Skills", value="\n".join(learnable_text), inline=False)
+            embed.set_footer(text="Use `$learn_skill <skill_name>` to learn a new skill.")
+        else:
+            embed.add_field(name="Learnable Skills", value="No new skills to learn at your current level or progress.", inline=False)
+
+        await ctx.send(embed=embed)
+
+    @commands.command(name='learn_skill', help='Learn a new skill for your class.')
+    async def learn_skill(self, ctx, *, skill_name: str):
+        user_id = str(ctx.author.id)
+        user_data = get_user_data(user_id)
+        if not user_data or 'rpg_data' not in user_data or user_data['rpg_data'] is None:
+            await ctx.send(embed=create_embed("❌ No Character", "You need to `$start` your adventure first!", COLORS['error']))
+            return
+
+        rpg_data = user_data['rpg_data']
+        player_class = rpg_data.get('class')
+
+        if not player_class:
+            await ctx.send(embed=create_embed("❌ No Class", "You need to choose a class first with `$class`!", COLORS['error']))
+            return
+
+        class_skills_data = SKILLS.get(player_class, {})
+        
+        skill_id_to_learn = None
+        for k, v in class_skills_data.items():
+            if v['name'].lower() == skill_name.lower() or k == skill_name.lower():
+                skill_id_to_learn = k
+                break
+        
+        if not skill_id_to_learn or skill_id_to_learn not in class_skills_data:
+            await ctx.send(embed=create_embed("❌ Skill Not Found", "Could not find that skill for your class.", COLORS['error']))
+            return
+        
+        skill_info = class_skills_data[skill_id_to_learn]
+        learned_skills = rpg_data.get('skills_learned', [])
+
+        if skill_id_to_learn in learned_skills:
+            await ctx.send(embed=create_embed("❌ Skill Already Learned", f"You have already learned **{skill_info['name']}**.", COLORS['warning']))
+            return
+
+        # Check requirements
+        level_req = skill_info.get('level_req', 0)
+        prereq_skill = skill_info.get('prerequisite_skill')
+
+        if rpg_data['level'] < level_req:
+            await ctx.send(embed=create_embed("❌ Level Too Low", f"You need to be at least Level {level_req} to learn **{skill_info['name']}**.", COLORS['error']))
+            return
+        
+        if prereq_skill and prereq_skill not in learned_skills:
+            prereq_name = class_skills_data.get(prereq_skill, {}).get('name', prereq_skill)
+            await ctx.send(embed=create_embed("❌ Prerequisite Missing", f"You must first learn **{prereq_name}** to learn **{skill_info['name']}**.", COLORS['error']))
+            return
+
+        # Learn the skill
+        learned_skills.append(skill_id_to_learn)
+        rpg_data['skills_learned'] = learned_skills # Ensure it's saved back
+        update_user_data(user_id, user_data)
+
+        await ctx.send(embed=create_embed("✅ Skill Learned!", f"You have learned **{skill_info['name']}**!", COLORS['success']))
+        logger.info(f"User {user_id} learned skill {skill_id_to_learn}.")
+
+
+    @commands.command(name='profession', help='Unlock a crafting profession')
+    async def choose_profession(self, ctx, profession_name: str = None):
+        embed = create_embed("🛠️ Professions Under Development", "Professions like Blacksmithing, Alchemy, and Enchanting are being set up! Soon you'll be able to master new trades and craft powerful gear.", COLORS['info'])
+        await ctx.send(embed=embed)
+
+    @commands.command(name='craft', help='Craft an item using your profession')
+    async def craft_item(self, ctx, *, recipe_name: str):
+        embed = create_embed("🔨 Crafting Under Development", "Crafting is being refined! Collect materials and discover recipes; the crafting stations will be open soon.", COLORS['info'])
+        await ctx.send(embed=embed)
+    
+    @commands.command(name='gather', help='Gather crafting materials from a location')
+    async def gather_materials(self, ctx, location: str = None):
+        embed = create_embed("🌳 Gathering Under Development", "The world is vast with resources waiting! Gathering mechanics are being implemented to let you collect rare materials.", COLORS['info'])
+        await ctx.send(embed=embed)
+
+    @commands.command(name='dungeon', help='Enter an interactive dungeon.')
+    async def enter_dungeon(self, ctx, dungeon_id: str = None):
+        embed = create_embed("🏰 Dungeons Under Development", "The dungeons are being mapped and filled with challenges! Prepare for epic multi-floor raids and unique encounters in a future update.", COLORS['info'])
+        await ctx.send(embed=embed)
+
+    # --- Admin Commands ---
+    @commands.group(name='admin', help='Admin commands (Owner only)')
+    @commands.is_owner()
+    async def admin(self, ctx):
+        """Admin command group."""
+        if ctx.invoked_subcommand is None:
+            embed = create_embed(
+                "👑 Admin Commands",
+                "Available admin commands:\n"
+                "• `$admin give <user> <item> [qty]` - Give items to user\n"
+                "• `$admin unlimited <user> <type>` - Grant unlimited resources\n"
+                "• `$admin reset <user>` - Reset player progress\n"
+                "• `$admin setlevel <user> <level>` - Set player level\n"
+                "• `$admin addxp <user> <amount>` - Add XP to player\n"
+                "• `$admin clear_state <user>` - Clear stuck battle/dungeon states\n"
+                "• `$admin logs` - View bot logs",
+                COLORS['primary']
+            )
+            await ctx.send(embed=embed)
+
+    @admin.command(name='unlimited', help='Grant unlimited resources')
+    async def admin_unlimited(self, ctx, user: discord.Member, resource_type: str):
+        """Grant unlimited resources to a player."""
+        user_id = str(user.id)
+        user_data = get_user_data(user_id)
+
+        if not user_data or 'rpg_data' not in user_data or user_data['rpg_data'] is None:
+            embed = create_embed(
+                "❌ User Not Found",
+                f"{user.mention} hasn't started their adventure yet!",
+                COLORS['error']
+            )
+            await ctx.send(embed=embed)
+            return
+
+        rpg_data = user_data['rpg_data'] # rpg_data is now guaranteed to exist
+
+        if resource_type.lower() == 'coins':
+            rpg_data['coins'] = 999999999999999
+            message = "unlimited coins"
+        elif resource_type.lower() == 'xp':
+            rpg_data['xp'] = 999999999999999
+            # Recalculate level
+            new_level = calculate_level_from_xp(rpg_data['xp'])
+            rpg_data['level'] = new_level
+            message = f"unlimited XP (level {new_level})"
+        elif resource_type.lower() == 'items':
+            # Add large quantities of all items from ITEMS
+            if 'inventory' not in rpg_data:
+                rpg_data['inventory'] = {}
+
+            for item_id, item_data in ITEMS.items():
+                rpg_data['inventory'][item_id] = 999999
+            message = "unlimited items"
+        else:
+            embed = create_embed(
+                "❌ Invalid Type",
+                "Valid types: coins, xp, items",
+                COLORS['error']
+            )
+            await ctx.send(embed=embed)
+            return
+
+        # Save changes
+        update_user_data(user_id, user_data)
+
+        embed = create_embed(
+            "✅ Resources Granted",
+            f"Granted {message} to {user.mention}!",
+            COLORS['success']
+        )
+        await ctx.send(embed=embed)
+
+        logger.info(f"Admin {ctx.author.id} granted {resource_type} to user {user_id}")
+
+    @admin.command(name='give', help='Give items to a user')
+    async def admin_give(self, ctx, user: discord.Member, item_name: str, quantity: int = 1):
+        """Give items to a player."""
+        try:
+            quantity = int(quantity)
+        except (ValueError, TypeError):
+            embed = create_embed(
+                "❌ Invalid Quantity",
+                "Quantity must be a valid number!",
+                COLORS['error']
+            )
+            await ctx.send(embed=embed)
+            return
+
+        if quantity <= 0:
+            embed = create_embed(
+                "❌ Invalid Quantity",
+                "Quantity must be positive!",
+                COLORS['error']
+            )
+            await ctx.send(embed=embed)
+            return
+
+        if quantity > 999999: # Cap quantity for safety
+            embed = create_embed(
+                "❌ Quantity Too Large",
+                "Maximum quantity is 999,999!",
+                COLORS['error']
+            )
+            await ctx.send(embed=embed)
+            return
+
+        user_id = str(user.id)
+        user_data = get_user_data(user_id)
+
+        if not user_data or 'rpg_data' not in user_data or user_data['rpg_data'] is None:
+            embed = create_embed(
+                "❌ User Not Found",
+                f"{user.mention} hasn't started their adventure yet!",
+                COLORS['error']
+            )
+            await ctx.send(embed=embed)
+            return
+
+        rpg_data = user_data['rpg_data'] # rpg_data is now guaranteed to exist
+
+        item_id_to_give = None
+        for k, v in ITEMS.items(): # Fuzzy match item name
+            if v['name'].lower() == item_name.lower() or k == item_name.lower():
+                item_id_to_give = k
+                break
+        
+        if not item_id_to_give or item_id_to_give not in ITEMS:
+            await ctx.send(embed=create_embed("❌ Item Not Found", f"Could not find item '{item_name}'.", COLORS['error']))
+            return
+
+        # Add items to inventory
+        if 'inventory' not in rpg_data:
+            rpg_data['inventory'] = {}
+
+        current_amount = rpg_data['inventory'].get(item_id_to_give, 0)
+        rpg_data['inventory'][item_id_to_give] = current_amount + quantity
+
+        # Save changes
+        update_user_data(user_id, user_data)
+
+        embed = create_embed(
+            "✅ Items Given",
+            f"Gave {quantity}x {ITEMS[item_id_to_give]['name']} to {user.mention}!",
+            COLORS['success']
+        )
+        await ctx.send(embed=embed)
+
+        logger.info(f"Admin {ctx.author.id} gave {quantity}x {item_id_to_give} to user {user_id}")
+
+    @admin.command(name='logs', help='View bot logs')
+    async def admin_logs(self, ctx, lines: int = 50):
+        """View recent bot logs."""
+        try:
+            with open('bot.log', 'r') as f:
+                log_lines = f.readlines()
+
+            recent_logs = log_lines[-lines:] if len(log_lines) > lines else log_lines
+            log_content = ''.join(recent_logs)
+
+            if len(log_content) > 4000: # Discord embed field value limit
+                # Split into chunks if too long
+                chunks = [log_content[i:i+4000] for i in range(0, len(log_content), 4000)]
+                for i, chunk in enumerate(chunks):
+                    embed = create_embed(
+                        f"📋 Bot Logs (Part {i+1}/{len(chunks)})",
+                        f"```\n{chunk}\n```",
+                        COLORS['info']
+                    )
+                    await ctx.send(embed=embed)
+            else:
+                embed = create_embed(
+                    f"📋 Bot Logs (Last {len(recent_logs)} lines)",
+                    f"```\n{log_content}\n```",
+                    COLORS['info']
+                )
+                await ctx.send(embed=embed)
+
+        except FileNotFoundError:
+            embed = create_embed(
+                "❌ No Logs Found",
+                "Bot log file not found. Ensure logging is configured to 'bot.log'.",
+                COLORS['error']
+            )
+            await ctx.send(embed=embed)
+        except Exception as e:
+            logger.error(f"Error reading logs for admin command: {e}")
+            embed = create_embed(
+                "❌ Error Reading Logs",
+                f"Error: {str(e)}",
+                COLORS['error']
+            )
+            await ctx.send(embed=embed)
+
+    @admin.command(name='reset', help='Reset a player\'s progress')
+    async def admin_reset(self, ctx, user: discord.Member):
+        """Reset a player's RPG progress."""
+        user_id = str(user.id)
+        
+        if user_id == str(self.OWNER_ID):
+            await ctx.send(embed=create_embed("❌ Cannot Reset Owner", "You cannot reset the owner's progress.", COLORS['error']))
+            return
+
+        user_data = get_user_data(user_id)
+
+        if not user_data or 'rpg_data' not in user_data or user_data['rpg_data'] is None:
+            embed = create_embed(
+                "❌ User Not Found",
+                f"{user.mention} hasn't started their adventure yet!",
+                COLORS['error']
+            )
+            await ctx.send(embed=embed)
+            return
+
+        # Call the helper function to wipe progress
+        self.wipe_player_progress(user_id)
+
+        embed = create_embed(
+            "✅ Player Reset",
+            f"Reset {user.mention}'s RPG progress!",
+            COLORS['success']
+        )
+        await ctx.send(embed=embed)
+
+        logger.info(f"Admin {ctx.author.id} reset user {user_id}")
+
+    @admin.command(name='setlevel', help='Set a player\'s level')
+    async def admin_setlevel(self, ctx, user: discord.Member, level: int):
+        """Set a player's level."""
+        if level < 1 or level > 999: # Increased max level
+            embed = create_embed(
+                "❌ Invalid Level",
+                "Level must be between 1 and 999!",
+                COLORS['error']
+            )
+            await ctx.send(embed=embed)
+            return
+
+        user_id = str(user.id)
+        user_data = get_user_data(user_id)
+
+        if not user_data or 'rpg_data' not in user_data or user_data['rpg_data'] is None:
+            embed = create_embed(
+                "❌ User Not Found",
+                f"{user.mention} hasn't started their adventure yet!",
+                COLORS['error']
+            )
+            await ctx.send(embed=embed)
+            return
+
+        rpg_data = user_data['rpg_data'] # rpg_data is now guaranteed to exist
+        old_level = rpg_data['level']
+        rpg_data['level'] = level
+
+        # Adjust XP to match the new level (approximate min XP for that level)
+        # IMPORTANT: Ensure calculate_xp_for_level is implemented in utils/helpers.py
+        rpg_data['xp'] = calculate_xp_for_level(level)
+
+        # Recalculate all stats based on new level
+        effective_stats = calculate_stats_with_equipment(rpg_data)
+        rpg_data.update(effective_stats) # Update all relevant stats
+        rpg_data['hp'] = rpg_data['max_hp'] # Full heal
+        rpg_data['mana'] = rpg_data['max_mana'] # Full mana
+
+        # Save changes
+        update_user_data(user_id, user_data)
+
+        embed = create_embed(
+            "✅ Level Set",
+            f"Set {user.mention}'s level from {old_level} to {level}!",
+            COLORS['success']
+        )
+        await ctx.send(embed=embed)
+
+        logger.info(f"Admin {ctx.author.id} set user {user_id} level to {level}")
+
+    @admin.command(name='addxp', help='Add XP to a player')
+    async def admin_addxp(self, ctx, user: discord.Member, amount: int):
+        """Add XP to a player."""
+        if amount <= 0:
+            await ctx.send(embed=create_embed("❌ Invalid Amount", "XP amount must be positive.", COLORS['error']))
+            return
+
+        user_id = str(user.id)
+        user_data = get_user_data(user_id)
+
+        if not user_data or 'rpg_data' not in user_data or user_data['rpg_data'] is None:
+            await ctx.send(embed=create_embed("❌ User Not Found", f"{user.mention} hasn't started their adventure yet!", COLORS['error']))
+            return
+
+        rpg_data = user_data['rpg_data']
+        rpg_data['xp'] += amount
+        
+        old_level = rpg_data['level']
+        new_level = calculate_level_from_xp(rpg_data['xp'])
+        
+        level_up_msg = ""
+        if new_level > old_level:
+            rpg_data['level'] = new_level
+            # Recalculate stats based on new level
+            effective_stats = calculate_stats_with_equipment(rpg_data)
+            rpg_data.update(effective_stats)
+            rpg_data['hp'] = rpg_data['max_hp'] # Full heal
+            rpg_data['mana'] = rpg_data['max_mana'] # Full mana
+            level_up_msg = f" (Leveled up to {new_level}!)"
+
+        update_user_data(user_id, user_data)
+
+        await ctx.send(embed=create_embed("✅ XP Added", f"Added {amount} XP to {user.mention}. Current XP: {format_number(rpg_data['xp'])}{level_up_msg}", COLORS['success']))
+        logger.info(f"Admin {ctx.author.id} added {amount} XP to user {user_id}. Current XP: {rpg_data['xp']}")
+
+
+    @admin.command(name='clear_state', help='Clear stuck battle/dungeon/trade states for a user')
+    async def admin_clear_state(self, ctx, user: discord.Member):
+        """Clear a user's stuck battle, dungeon, or trade state."""
+        user_id = str(user.id)
+        
+        cleared_items = []
+
+        # Clear from active battles
+        if user_id in self.active_battles:
+            del self.active_battles[user_id]
+            cleared_items.append("active battle")
+            logger.info(f"Admin {ctx.author.id} cleared active battle for user {user_id}")
+        
+        # Clear from active dungeons
+        if user_id in self.active_dungeons:
+            del self.active_dungeons[user_id]
+            cleared_items.append("active dungeon")
+            logger.info(f"Admin {ctx.author.id} cleared active dungeon for user {user_id}")
+
+        # Clear from active trades (both mapping and the trade view itself)
+        if user_id in self.active_trades and isinstance(self.active_trades[user_id], str): # User mapped to a trade_id
+            trade_id = self.active_trades[user_id]
+            if trade_id in self.active_trades and isinstance(self.active_trades[trade_id], TradeView): # Check if the actual TradeView exists
+                trade_view = self.active_trades[trade_id]
+                # Attempt to stop the view and refund offers if it's still active
+                if not trade_view.is_finished:
+                    await trade_view.finalize_trade(cancelled=True) # Refund offers
+                    trade_view.stop()
+                del self.active_trades[trade_id] # Delete the TradeView instance
+                cleared_items.append("active trade (and refunded items)")
+                logger.info(f"Admin {ctx.author.id} cleared active trade {trade_id} for user {user_id}")
+            # Also remove the user's mapping to the trade_id
+            if user_id in self.active_trades:
+                del self.active_trades[user_id]
+            # Check if the other player in that trade also needs their mapping cleared
+            # This is more complex and might require iterating all self.active_trades if not using a central trade_id to view mapping
+            # For simplicity, this will only clear the requesting user's state.
+
+        # Clear dungeon progress from user data if they were stuck in a dungeon
+        user_data = get_user_data(user_id)
+        if user_data and 'rpg_data' in user_data and user_data['rpg_data'] is not None:
+            rpg_data = user_data['rpg_data']
+            if rpg_data.get('current_dungeon_id'):
+                rpg_data['current_dungeon_id'] = None
+                rpg_data['current_dungeon_floor'] = None
+                rpg_data['current_dungeon_room'] = None
+                update_user_data(user_id, user_data)
+                if "dungeon progress data" not in cleared_items: # Avoid duplicate message
+                    cleared_items.append("dungeon progress data")
+                logger.info(f"Admin {ctx.author.id} cleared dungeon progress data for user {user_id}")
+            
+        if cleared_items:
+            embed = create_embed(
+                "✅ State Cleared",
+                f"Cleared {user.mention}'s stuck states:\n• " + "\n• ".join(cleared_items),
+                COLORS['success']
+            )
+        else:
+            embed = create_embed(
+                "ℹ️ No Stuck States",
+                f"{user.mention} doesn't have any stuck battle, dungeon, or trade states.",
+                COLORS['info']
+            )
+            
+        await ctx.send(embed=embed)
+        logger.info(f"Admin {ctx.author.id} cleared states for user {user_id}: {cleared_items}")
+
+    # Helper function for wiping player data (used by World Ender and admin reset)
+    def wipe_player_progress(self, user_id: str):
+        user_data = get_user_data(user_id)
+        if user_data and 'rpg_data' in user_data:
+            user_data['rpg_data'] = self.create_default_rpg_data() # Reset to defaults
+            update_user_data(user_id, user_data)
+            logger.warning(f"Player {user_id}'s RPG progress has been wiped.")
+        else:
+            logger.warning(f"Attempted to wipe non-existent RPG data for user {user_id}.")
+
+
+async def setup(bot):
+    """Setup function required for cog loading."""
+    await bot.add_cog(RPGGamesCog(bot))

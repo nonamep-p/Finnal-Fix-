@@ -1,0 +1,590 @@
+import discord
+from discord.ext import commands
+from discord import app_commands
+import logging
+from typing import Optional, Dict, Any, List, Union
+import asyncio # Import asyncio for asyncio.to_thread
+
+# Import necessary utilities and constants
+from config import COLORS, EMOJIS, is_module_enabled
+from utils.helpers import create_embed, format_number, get_all_shop_items, apply_item_effect, calculate_effective_stats
+from utils.database import get_user_rpg_data, update_user_rpg_data, ensure_user_exists
+from utils.constants import WEAPONS, ARMOR, CONSUMABLES, PLAYER_CLASSES, RPG_CONSTANTS
+    
+logger = logging.getLogger(__name__)
+
+class InventoryView(discord.ui.View):
+    """
+    Interactive view for browsing and managing player inventory.
+    Allows equipping and using items.
+    """
+    def __init__(self, user_id: str, bot_instance: commands.Bot, current_page: str = "all"): # Added bot_instance
+        super().__init__(timeout=300)
+        self.user_id = user_id
+        self.bot = bot_instance # Store bot instance
+        self.current_page = current_page # 'all', 'weapons', 'armor', 'consumables', 'misc'
+        self.page_index = 0
+        self.items_per_page = 10 # Max items to display per page
+
+    # Changed to async def and uses asyncio.to_thread
+    async def _get_player_data(self) -> Dict[str, Any]:
+        """Helper to get current player data from the database."""
+        return await asyncio.to_thread(get_user_rpg_data, self.user_id) or {}
+
+    # Changed to async def and uses asyncio.to_thread
+    async def _update_player_data(self, player_data: Dict[str, Any]) -> bool:
+        """Helper to save player data to the database."""
+        return await asyncio.to_thread(update_user_rpg_data, self.user_id, player_data)
+
+    def _get_filtered_inventory(self, player_inventory: List[str]) -> List[str]:
+        """Filters inventory based on current_page category."""
+        filtered_items = []
+        for item_name in player_inventory:
+            item_info = WEAPONS.get(item_name) or ARMOR.get(item_name) or CONSUMABLES.get(item_name)
+            if not item_info:
+                continue # Skip unknown items
+
+            category = item_info.get('category', 'misc') # Default to misc if not explicitly set
+
+            if self.current_page == "all":
+                filtered_items.append(item_name)
+            elif self.current_page == "weapons" and item_info.get('attack'): # Simple check for weapons
+                filtered_items.append(item_name)
+            elif self.current_page == "armor" and item_info.get('defense'): # Simple check for armor
+                filtered_items.append(item_name)
+            elif self.current_page == "consumables" and category == "consumables":
+                filtered_items.append(item_name)
+            elif self.current_page == "misc" and category == "misc":
+                filtered_items.append(item_name)
+        
+        # Sort for consistent display
+        return sorted(filtered_items)
+
+    def _get_page_items(self, filtered_items: List[str]) -> List[str]:
+        """Gets items for the current page."""
+        start_index = self.page_index * self.items_per_page
+        end_index = start_index + self.items_per_page
+        return filtered_items[start_index:end_index]
+
+    def _get_max_pages(self, filtered_items: List[str]) -> int:
+        """Calculates the maximum number of pages."""
+        return (len(filtered_items) + self.items_per_page - 1) // self.items_per_page
+
+    async def create_inventory_embed(self) -> discord.Embed:
+        """Creates the inventory embed for the current state."""
+        player_data = await self._get_player_data() # Await this call
+        if not player_data:
+            return create_embed("❌ Error", "Player data not found!", COLORS['error'])
+
+        player_inventory = player_data.get('inventory', [])
+        filtered_items = self._get_filtered_inventory(player_inventory)
+        current_page_items = self._get_page_items(filtered_items)
+        max_pages = self._get_max_pages(filtered_items)
+
+        embed = create_embed(
+            title=f"🎒 {player_data.get('username', 'Your')}'s Inventory ({self.current_page.title()})",
+            description=f"Page {self.page_index + 1}/{max_pages if max_pages > 0 else 1}",
+            color=COLORS['secondary']
+        )
+
+        if not filtered_items:
+            embed.description = "Your inventory is empty in this category!"
+            embed.add_field(name="No Items", value="Go on adventures to find items.", inline=False)
+        else:
+            item_display_text = ""
+            for item_name in current_page_items:
+                item_count = player_inventory.count(item_name)
+                item_info = WEAPONS.get(item_name) or ARMOR.get(item_name) or CONSUMABLES.get(item_name)
+                
+                rarity_text = ""
+                if item_info and 'rarity' in item_info:
+                    rarity_text = f" ({item_info['rarity'].title()})"
+                
+                count_text = f" x{item_count}" if item_count > 1 else ""
+                item_display_text += f"• {item_name}{count_text}{rarity_text}\n"
+            
+            embed.add_field(name="📦 Items", value=item_display_text, inline=False)
+
+        # Update button states
+        self.children[0].disabled = self.page_index == 0 # Previous button
+        self.children[1].disabled = self.page_index >= max_pages - 1 # Next button
+        self.children[2].disabled = not filtered_items # Equip button
+        self.children[3].disabled = not filtered_items # Use button
+        self.children[4].disabled = not filtered_items # Sell button
+
+        return embed
+
+    @discord.ui.button(label="◀️ Previous", style=discord.ButtonStyle.secondary, row=2)
+    async def previous_page(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if str(interaction.user.id) != self.user_id:
+            await interaction.response.send_message("❌ This isn't your inventory!", ephemeral=True)
+            return
+        filtered_items = self._get_filtered_inventory((await self._get_player_data()).get('inventory', []))
+        if self.page_index > 0:
+            self.page_index -= 1
+            embed = await self.create_inventory_embed()
+            await interaction.response.edit_message(embed=embed, view=self)
+        else:
+            await interaction.response.send_message("You are on the first page!", ephemeral=True)
+
+    @discord.ui.button(label="▶️ Next", style=discord.ButtonStyle.secondary, row=2)
+    async def next_page(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if str(interaction.user.id) != self.user_id:
+            await interaction.response.send_message("❌ This isn't your inventory!", ephemeral=True)
+            return
+        filtered_items = self._get_filtered_inventory((await self._get_player_data()).get('inventory', []))
+        if self.page_index < self._get_max_pages(filtered_items) - 1:
+            self.page_index += 1
+            embed = await self.create_inventory_embed()
+            await interaction.response.edit_message(embed=embed, view=self)
+        else:
+            await interaction.response.send_message("You are on the last page!", ephemeral=True)
+
+    @discord.ui.select(
+        placeholder="Filter by category...",
+        options=[
+            discord.SelectOption(label="All Items", value="all", emoji="📦"),
+            discord.SelectOption(label="Weapons", value="weapons", emoji="⚔️"),
+            discord.SelectOption(label="Armor", value="armor", emoji="🛡️"),
+            discord.SelectOption(label="Consumables", value="consumables", emoji="🧪"),
+            discord.SelectOption(label="Misc Items", value="misc", emoji="⚙️")
+        ],
+        row=1 # Place dropdown in the second row
+    )
+    async def filter_select(self, interaction: discord.Interaction, select: discord.ui.Select):
+        if str(interaction.user.id) != self.user_id:
+            await interaction.response.send_message("❌ This isn't your inventory!", ephemeral=True)
+            return
+        self.current_page = select.values[0]
+        self.page_index = 0 # Reset to first page on filter change
+        embed = await self.create_inventory_embed()
+        await interaction.response.edit_message(embed=embed, view=self)
+
+    @discord.ui.button(label="⚔️ Equip Item", style=discord.ButtonStyle.success, row=2)
+    async def equip_item_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if str(interaction.user.id) != self.user_id:
+            await interaction.response.send_message("❌ This isn't your inventory!", ephemeral=True)
+            return
+        
+        player_data = await self._get_player_data()
+        inventory = player_data.get('inventory', [])
+        equippable_items = [item for item in inventory if item in WEAPONS or item in ARMOR]
+
+        if not equippable_items:
+            await interaction.response.send_message("You have no equippable items in your inventory!", ephemeral=True)
+            return
+
+        # Create a dropdown for equippable items
+        options = []
+        for item_name in sorted(list(set(equippable_items))): # Use set to avoid duplicate options
+            item_info = WEAPONS.get(item_name) or ARMOR.get(item_name)
+            if item_info:
+                options.append(discord.SelectOption(label=item_name, value=item_name, description=item_info.get('description', '')))
+        
+        if not options:
+            await interaction.response.send_message("You have no equippable items in your inventory!", ephemeral=True)
+            return
+
+        select_menu = discord.ui.Select(
+            placeholder="Select an item to equip...",
+            options=options,
+            custom_id="equip_select"
+        )
+        
+        async def equip_callback(select_interaction: discord.Interaction):
+            if str(select_interaction.user.id) != self.user_id:
+                await select_interaction.response.send_message("❌ This isn't your action!", ephemeral=True)
+                return
+
+            selected_item_name = select_interaction.values[0]
+            player_data = await self._get_player_data()
+
+            if selected_item_name not in player_data['inventory']:
+                await select_interaction.response.send_message(f"You don't have '{selected_item_name}' in your inventory!", ephemeral=True)
+                return
+
+            # Get item info for the selected item
+            item_info = WEAPONS.get(selected_item_name) or ARMOR.get(selected_item_name)
+            if not item_info:
+                await select_interaction.response.send_message(f"Item '{selected_item_name}' not found!", ephemeral=True)
+                return
+
+            # Check class requirement
+            class_req = item_info.get('class_req', 'any')
+            if class_req != 'any' and player_data.get('player_class') != class_req:
+                await select_interaction.response.send_message(f"You must be a {class_req.title()} to equip '{selected_item_name}'.", ephemeral=True)
+                return
+
+            # Determine slot
+            slot = None
+            if selected_item_name in WEAPONS:
+                slot = 'weapon'
+            elif selected_item_name in ARMOR:
+                # Determine specific armor slot (helmet, chestplate, etc.)
+                # This requires adding a 'slot' field to ARMOR definitions in constants.py
+                # For now, a simple check based on common names or a generic 'armor' slot
+                if 'helmet' in selected_item_name.lower(): slot = 'helmet'
+                elif 'vest' in selected_item_name.lower() or 'mail' in selected_item_name.lower() or 'robe' in selected_item_name.lower() or 'suit' in selected_item_name.lower(): slot = 'chestplate'
+                elif 'leggings' in selected_item_name.lower(): slot = 'leggings'
+                elif 'boots' in selected_item_name.lower(): slot = 'boots'
+                elif 'glove' in selected_item_name.lower(): slot = 'gloves'
+                elif 'cloak' in selected_item_name.lower(): slot = 'accessory' # Cloaks often act as accessories
+                elif 'ring' in selected_item_name.lower() or 'amulet' in selected_item_name.lower(): slot = 'accessory'
+                else: slot = 'armor' # Fallback generic armor slot if not specific
+
+            if not slot:
+                await select_interaction.response.send_message(f"Cannot determine equip slot for '{selected_item_name}'.", ephemeral=True)
+                return
+
+            # Unequip current item if slot is occupied
+            current_equipped = player_data['equipped_items'].get(slot)
+            if current_equipped and current_equipped != 'None':
+                player_data['inventory'].append(current_equipped) # Add back to inventory
+                
+            player_data['equipped_items'][slot] = selected_item_name
+            player_data['inventory'].remove(selected_item_name)
+
+            if await self._update_player_data(player_data):
+                embed = await self.create_inventory_embed() # Update inventory display
+                await select_interaction.response.edit_message(embed=embed, view=self) # Edit the original inventory message
+                await select_interaction.followup.send(f"✅ You equipped '{selected_item_name}' in your {slot} slot!", ephemeral=True)
+                logger.info(f"User {self.user_id} equipped {selected_item_name}.")
+            else:
+                await select_interaction.response.send_message(f"❌ Failed to equip '{selected_item_name}'.", ephemeral=True)
+
+        select_menu.callback = equip_callback
+        
+        # Create a temporary view just for the dropdown
+        temp_view = discord.ui.View(timeout=60)
+        temp_view.add_item(select_menu)
+        
+        await interaction.response.send_message("Select an item to equip:", view=temp_view, ephemeral=True)
+
+
+    @discord.ui.button(label="🧪 Use Item", style=discord.ButtonStyle.blurple, row=2)
+    async def use_item_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if str(interaction.user.id) != self.user_id:
+            await interaction.response.send_message("❌ This isn't your inventory!", ephemeral=True)
+            return
+        
+        player_data = await self._get_player_data()
+        inventory = player_data.get('inventory', [])
+        usable_items = [item for item in inventory if item in CONSUMABLES]
+
+        if not usable_items:
+            await interaction.response.send_message("You have no usable items in your inventory!", ephemeral=True)
+            return
+
+        options = []
+        for item_name in sorted(list(set(usable_items))):
+            item_info = CONSUMABLES.get(item_name)
+            if item_info:
+                options.append(discord.SelectOption(label=item_name, value=item_name, description=item_info.get('description', '')))
+        
+        if not options:
+            await interaction.response.send_message("You have no usable items in your inventory!", ephemeral=True)
+            return
+
+        select_menu = discord.ui.Select(
+            placeholder="Select an item to use...",
+            options=options,
+            custom_id="use_select"
+        )
+
+        async def use_callback(select_interaction: discord.Interaction):
+            if str(select_interaction.user.id) != self.user_id:
+                await select_interaction.response.send_message("❌ This isn't your action!", ephemeral=True)
+                return
+
+            selected_item_name = select_interaction.values[0]
+            player_data = await self._get_player_data()
+
+            if selected_item_name not in player_data['inventory']:
+                await select_interaction.response.send_message(f"You don't have '{selected_item_name}' in your inventory!", ephemeral=True)
+                return
+
+            success, message = await apply_item_effect(self.user_id, selected_item_name, player_data) # player_data is modified by apply_item_effect
+            
+            if success:
+                # Re-fetch player data to get updated stats/inventory for embed
+                updated_player_data = await self._get_player_data()
+                embed = await self.create_inventory_embed() # Update inventory display
+                await select_interaction.response.edit_message(embed=embed, view=self) # Edit the original inventory message
+                await select_interaction.followup.send(f"✅ {message}", ephemeral=False) # Make public if it's a positive outcome
+                logger.info(f"User {self.user_id} successfully used {selected_item_name}.")
+            else:
+                await select_interaction.response.send_message(f"❌ {message}", ephemeral=True)
+                logger.warning(f"User {self.user_id} failed to use {selected_item_name}: {message}")
+
+        select_menu.callback = use_callback
+        
+        temp_view = discord.ui.View(timeout=60)
+        temp_view.add_item(select_menu)
+        
+        await interaction.response.send_message("Select an item to use:", view=temp_view, ephemeral=True)
+
+    @discord.ui.button(label="💰 Sell Item", style=discord.ButtonStyle.red, row=2)
+    async def sell_item_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if str(interaction.user.id) != self.user_id:
+            await interaction.response.send_message("❌ This isn't your inventory!", ephemeral=True)
+            return
+        
+        player_data = await self._get_player_data()
+        inventory = player_data.get('inventory', [])
+
+        if not inventory:
+            await interaction.response.send_message("Your inventory is empty! Nothing to sell.", ephemeral=True)
+            return
+        
+        # Create a dropdown for all items in inventory to sell
+        options = []
+        # Use a set to create options for unique items, then get counts
+        unique_inventory_items = sorted(list(set(inventory)))
+        for item_name in unique_inventory_items:
+            item_count = inventory.count(item_name)
+            item_info = WEAPONS.get(item_name) or ARMOR.get(item_name) or CONSUMABLES.get(item_name)
+            
+            sell_price = 0
+            if item_info and 'price' in item_info:
+                sell_price = int(item_info['price'] * RPG_CONSTANTS.get('sell_multiplier', 0.5)) # Sell for 50% of buy price
+            
+            options.append(discord.SelectOption(
+                label=f"{item_name} (x{item_count})", 
+                value=item_name, 
+                description=f"Sell for {format_number(sell_price)} coins each"
+            ))
+
+        select_menu = discord.ui.Select(
+            placeholder="Select an item to sell...",
+            options=options,
+            custom_id="sell_select"
+        )
+        
+        async def sell_callback(select_interaction: discord.Interaction):
+            if str(select_interaction.user.id) != self.user_id:
+                await select_interaction.response.send_message("❌ This isn't your action!", ephemeral=True)
+                return
+            
+            selected_item_name = select_interaction.values[0]
+            player_data = await self._get_player_data()
+
+            if selected_item_name not in player_data['inventory']:
+                await select_interaction.response.send_message(f"You don't have '{selected_item_name}' in your inventory!", ephemeral=True)
+                return
+
+            item_info = WEAPONS.get(selected_item_name) or ARMOR.get(selected_item_name) or CONSUMABLES.get(selected_item_name)
+            if not item_info or 'price' not in item_info:
+                await select_interaction.response.send_message(f"'{selected_item_name}' cannot be sold.", ephemeral=True)
+                return
+            
+            sell_price = int(item_info['price'] * RPG_CONSTANTS.get('sell_multiplier', 0.5))
+            
+            player_data['inventory'].remove(selected_item_name)
+            player_data['gold'] = player_data.get('gold', 0) + sell_price
+
+            if await self._update_player_data(player_data):
+                embed = await self.create_inventory_embed() # Update inventory display
+                await select_interaction.response.edit_message(embed=embed, view=self) # Edit original inventory message
+                await select_interaction.followup.send(f"✅ You sold '{selected_item_name}' for {format_number(sell_price)} {EMOJIS['coins']}!", ephemeral=True)
+                logger.info(f"User {self.user_id} sold {selected_item_name}.")
+            else:
+                await select_interaction.response.send_message(f"❌ Failed to sell '{selected_item_name}'.", ephemeral=True)
+
+        select_menu.callback = sell_callback
+        
+        # Corrected indentation for these lines to be part of sell_item_button, not sell_callback
+        temp_view = discord.ui.View(timeout=60)
+        temp_view.add_item(select_menu)
+        
+        await interaction.response.send_message("Select an item to sell:", view=temp_view, ephemeral=True)
+
+
+class RPGItemsCog(commands.Cog):
+    """
+    RPG Items and Inventory Management system.
+    Handles inventory display, equipping items, and using consumables.
+    """
+
+    def __init__(self, bot):
+        self.bot = bot
+
+    @commands.command(name='inventory', help='View and manage your inventory')
+    @app_commands.command(name="inventory", description="View and manage your inventory")
+    async def inventory_command(self, ctx: commands.Context):
+        """
+        Displays the player's inventory with interactive controls for filtering,
+        equipping, using, and selling items.
+        """
+        if not is_module_enabled("rpg_games", ctx.guild.id): # Assuming items are part of RPG module
+            if isinstance(ctx, app_commands.Context):
+                await ctx.response.send_message("❌ RPG Games module is disabled!", ephemeral=True)
+            else:
+                await ctx.send("❌ RPG Games module is disabled!")
+            return
+
+        user_id = str(ctx.author.id)
+        player_data = get_user_rpg_data(user_id)
+
+        if not player_data or not player_data.get('player_class'):
+            embed = create_embed(
+                "❌ No Character Found",
+                "You need to create a character first! Use `/start` to begin your adventure.",
+                COLORS['error']
+            )
+            if isinstance(ctx, app_commands.Context):
+                await ctx.response.send_message(embed=embed, ephemeral=True)
+            else:
+                await ctx.send(embed=embed)
+            return
+        
+        # Pass self.bot to InventoryView
+        view = InventoryView(user_id, self.bot)
+        embed = await view.create_inventory_embed()
+
+        if isinstance(ctx, app_commands.Context):
+            await ctx.response.send_message(embed=embed, view=view, ephemeral=True)
+        else:
+            await ctx.send(embed=embed, view=view)
+
+    @commands.command(name='equip', help='Equip an item from your inventory')
+    @app_commands.command(name="equip", description="Equip an item from your inventory")
+    @app_commands.describe(item_name="The name of the item to equip")
+    async def equip_command(self, ctx: commands.Context, *, item_name: str):
+        """
+        Allows a player to equip a specific item from their inventory.
+        """
+        if not is_module_enabled("rpg_games", ctx.guild.id):
+            if isinstance(ctx, app_commands.Context):
+                await ctx.response.send_message("❌ RPG Games module is disabled!", ephemeral=True)
+            else:
+                await ctx.send("❌ RPG Games module is disabled!")
+            return
+
+        user_id = str(ctx.author.id)
+        player_data = get_user_rpg_data(user_id)
+
+        if not player_data or not player_data.get('player_class'):
+            embed = create_embed("❌ No Character Found", "You need to create a character first!", COLORS['error'])
+            if isinstance(ctx, app_commands.Context):
+                await ctx.response.send_message(embed=embed, ephemeral=True)
+            else:
+                await ctx.send(embed=embed)
+            return
+
+        item_name = item_name.strip()
+        item_info = WEAPONS.get(item_name) or ARMOR.get(item_name)
+
+        if not item_info:
+            await self._send_response(ctx, f"❌ Item '{item_name}' not found or cannot be equipped.", ephemeral=True)
+            return
+
+        if item_name not in player_data['inventory']:
+            await self._send_response(ctx, f"❌ You don't have '{item_name}' in your inventory!", ephemeral=True)
+            return
+
+        # Check class requirement
+        class_req = item_info.get('class_req', 'any')
+        if class_req != 'any' and player_data.get('player_class') != class_req:
+            await self._send_response(ctx, f"❌ You must be a {class_req.title()} to equip '{item_name}'.", ephemeral=True)
+            return
+
+        # Determine slot
+        slot = None
+        if item_name in WEAPONS:
+            slot = 'weapon'
+        elif item_name in ARMOR:
+            # This needs to be more robust if ARMOR doesn't have a 'slot' key
+            # For now, rely on common naming or add a 'slot' key to ARMOR constants
+            if 'helmet' in item_name.lower(): slot = 'helmet'
+            elif 'vest' in item_name.lower() or 'mail' in item_name.lower() or 'robe' in item_name.lower() or 'suit' in item_name.lower(): slot = 'chestplate'
+            elif 'leggings' in item_name.lower(): slot = 'leggings'
+            elif 'boots' in item_name.lower(): slot = 'boots'
+            elif 'glove' in item_name.lower(): slot = 'gloves'
+            elif 'cloak' in item_name.lower(): slot = 'accessory'
+            elif 'ring' in item_name.lower() or 'amulet' in item_name.lower(): slot = 'accessory'
+            else: 
+                # Fallback for general armor if no specific slot found
+                # Consider adding a 'slot' key to each armor piece in constants.py
+                slot = 'armor' # This 'armor' slot would need to be handled in player_data and profile display
+                await self._send_response(ctx, f"⚠️ Warning: Could not determine specific slot for '{item_name}'. Equipping as generic armor.", ephemeral=True)
+
+
+        if not slot:
+            await self._send_response(ctx, f"❌ Cannot determine equip slot for '{item_name}'.", ephemeral=True)
+            return
+
+        # Unequip current item if slot is occupied
+        current_equipped = player_data['equipped_items'].get(slot)
+        if current_equipped and current_equipped != 'None':
+            player_data['inventory'].append(current_equipped) # Add back to inventory
+            
+        player_data['equipped_items'][slot] = item_name
+        player_data['inventory'].remove(item_name)
+
+        if update_user_rpg_data(user_id, player_data):
+            await self._send_response(ctx, f"✅ You equipped '{item_name}' in your {slot} slot!", ephemeral=True)
+            logger.info(f"User {user_id} equipped {item_name}.")
+        else:
+            await self._send_response(ctx, f"❌ Failed to equip '{item_name}'.", ephemeral=True)
+
+    @commands.command(name='use', help='Use a consumable item from your inventory')
+    @app_commands.command(name="use", description="Use a consumable item from your inventory")
+    @app_commands.describe(item_name="The name of the item to use")
+    async def use_command(self, ctx: commands.Context, *, item_name: str):
+        """
+        Allows a player to use a consumable item from their inventory.
+        """
+        if not is_module_enabled("rpg_games", ctx.guild.id):
+            if isinstance(ctx, app_commands.Context):
+                await ctx.response.send_message("❌ RPG Games module is disabled!", ephemeral=True)
+            else:
+                await ctx.send("❌ RPG Games module is disabled!")
+            return
+
+        user_id = str(ctx.author.id)
+        player_data = get_user_rpg_data(user_id)
+
+        if not player_data or not player_data.get('player_class'):
+            embed = create_embed("❌ No Character Found", "You need to create a character first!", COLORS['error'])
+            if isinstance(ctx, app_commands.Context):
+                await ctx.response.send_message(embed=embed, ephemeral=True)
+            else:
+                await ctx.send(embed=embed)
+            return
+
+        item_name = item_name.strip()
+        item_info = CONSUMABLES.get(item_name)
+
+        if not item_info:
+            await self._send_response(ctx, f"❌ Item '{item_name}' not found or not a consumable.", ephemeral=True)
+            return
+        
+        if item_name not in player_data['inventory']:
+            await self._send_response(ctx, f"❌ You don't have '{item_name}' in your inventory!", ephemeral=True)
+            return
+
+        # Apply the item effect using the helper function
+        success, message = await apply_item_effect(user_id, item_name, player_data) # player_data is modified by apply_item_effect
+
+        if success:
+            # apply_item_effect already handles removing item and saving data
+            await self._send_response(ctx, f"✅ {message}", ephemeral=False) # Make public if it's a positive outcome
+            logger.info(f"User {user_id} successfully used {item_name}.")
+        else:
+            await self._send_response(ctx, f"❌ {message}", ephemeral=True)
+            logger.warning(f"User {user_id} failed to use {item_name}: {message}")
+
+    async def _send_response(self, ctx: Union[commands.Context, discord.Interaction], message: str, ephemeral: bool = False):
+        """Helper to send response based on context type."""
+        if isinstance(ctx, discord.Interaction):
+            await ctx.response.send_message(message, ephemeral=ephemeral)
+        else:
+            await ctx.send(message)
+
+async def setup(bot):
+    """
+    Setup function for the RPGItems cog.
+    Adds the cog to the bot.
+    """
+    await bot.add_cog(RPGItemsCog(bot))
+    logger.info("✅ RPG Items cog loaded successfully!")

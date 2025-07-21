@@ -1,0 +1,34 @@
+23:44:45 | 🤖 DISCORD    | WARNING | PyNaCl is not installed, voice will NOT be supported
+23:44:45 | 🌍 SERVER     | INFO | Starting web server on port 5000
+ * Serving Flask app 'web_server'
+ * Debug mode: off
+23:44:45 | 🧀 PLAGG      | INFO | ✅ ADMIN module loaded successfully
+23:44:46 | ⚡ AI_CHATBOT | INFO | ✅ AI client initialized successfully
+23:44:46 | 🧀 PLAGG      | INFO | ✅ AI_CHATBOT module loaded successfully
+23:44:46 | 🧀 PLAGG      | INFO | ✅ ECONOMY module loaded successfully
+23:44:46 | 🧀 PLAGG      | INFO | ✅ HELP module loaded successfully
+23:44:46 | 🧀 PLAGG      | INFO | ✅ MODERATION module loaded successfully
+23:44:46 | 🧀 PLAGG      | ERROR | ❌ RPG_CORE module failed: Extension 'cogs.rpg_core' raised an error: SyntaxError: unterminated string literal (detected at line 793) (game_data.py, line 793)
+23:44:46 | 🧀 PLAGG      | ERROR | ❌ RPG_GAMES module failed: Extension 'cogs.rpg_games' raised an error: SyntaxError: unterminated string literal (detected at line 793) (game_data.py, line 793)
+23:44:46 | 🧀 PLAGG      | ERROR | ❌ RPG_COMBAT module failed: Extension 'cogs.rpg_combat' raised an error: SyntaxError: unterminated string literal (detected at line 793) (game_data.py, line 793)
+23:44:46 | 🧀 PLAGG      | ERROR | ❌ RPG_DUNGEONS module failed: Extension 'cogs.rpg_dungeons' raised an error: SyntaxError: unterminated string literal (detected at line 793) (game_data.py, line 793)
+23:44:46 | 🧀 PLAGG      | ERROR | ❌ RPG_SHOP module failed: Extension 'cogs.rpg_shop' raised an error: SyntaxError: unterminated string literal (detected at line 793) (game_data.py, line 793)
+23:44:46 | 🧀 PLAGG      | INFO | 📊 Module Summary: 5 loaded, 5 failed
+23:44:46 | 🤖 DISCORD    | INFO | logging in using static token
+23:44:47 | 🌐 GATEWAY    | INFO | Shard ID None has connected to Gateway (Session ID: 20d4dd219672c2b9e68516b7ced260ea).
+
+============================================================
+🧀 PLAGG - KWAMI OF DESTRUCTION BOT
+============================================================
+✅ Bot User: Kaala Billota#1815
+🆔 Bot ID: 1392632915594055860
+🏰 Connected to 2 guilds
+👥 Serving 33 users
+============================================================
+
+23:44:50 | 🧀 PLAGG      | INFO | 🧀 Plagg (Kwami of Destruction) has awakened!
+23:44:50 | 🧀 PLAGG      | INFO | 🏰 Causing chaos in 2 guilds
+23:44:50 | 💾 DATABASE   | INFO | Database initialization complete
+23:44:50 | 🧀 PLAGG      | INFO | Database initialized successfully
+23:44:50 | 🧀 PLAGG      | INFO | Sent startup message to Aesthetic Template 2 in #╔═════════════╗
+23:44:51 | 🧀 PLAGG      | INFO | Sent startup message to 𝖬𝖾𝗈𝗐𝗍𝗈𝗉𝗂𝖺 in #╭・🥀・announcements

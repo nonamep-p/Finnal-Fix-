@@ -1,0 +1,1381 @@
+2025-07-12 16:38:23,323 - __main__ - ERROR - ❌ DISCORD_TOKEN environment variable is not set!
+2025-07-12 16:39:35,415 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-12 16:39:35,415 - discord.client - INFO - logging in using static token
+2025-07-12 16:39:36,230 - __main__ - INFO - Setting up bot...
+2025-07-12 16:39:36,230 - utils.database - INFO - Database initialization complete
+2025-07-12 16:39:36,238 - __main__ - INFO - ✅ Loaded cog: admin
+2025-07-12 16:39:36,245 - __main__ - INFO - ✅ Loaded cog: moderation
+2025-07-12 16:39:36,245 - __main__ - ERROR - ❌ Failed to load cog economy: Extension 'economy' could not be loaded or found.
+2025-07-12 16:39:36,246 - __main__ - ERROR - ❌ Failed to load cog rpg_games: Extension 'rpg_games' could not be loaded or found.
+2025-07-12 16:39:37,576 - ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-12 16:39:37,576 - __main__ - INFO - ✅ Loaded cog: ai_chatbot
+2025-07-12 16:39:37,576 - __main__ - ERROR - ❌ Failed to load cog help: Extension 'help' could not be loaded or found.
+2025-07-12 16:39:37,577 - web_server - INFO - ✅ Web server started on port 5000
+2025-07-12 16:39:37,580 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.31.128.155:5000
+2025-07-12 16:39:37,580 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-12 16:39:37,873 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 5925bf66b078a24adbd58fdacd43156b).
+2025-07-12 16:39:39,161 - werkzeug - INFO - 172.31.128.155 - - [12/Jul/2025 16:39:39] "GET / HTTP/1.1" 200 -
+2025-07-12 16:39:39,894 - __main__ - INFO - Bot is ready! Logged in as Kaala Billota#1815 (ID: 1392632915594055860)
+2025-07-12 16:39:39,894 - __main__ - INFO - Connected to 2 guilds
+2025-07-12 16:39:39,894 - __main__ - INFO - Syncing command tree...
+2025-07-12 16:39:40,163 - __main__ - INFO - ✅ Synced 13 slash commands globally
+2025-07-12 16:41:09,172 - discord.client - ERROR - Ignoring exception in on_message
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/client.py", line 481, in _run_event
+    await coro(*args, **kwargs)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/ext/commands/bot.py", line 1411, in on_message
+    await self.process_commands(message)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/ext/commands/bot.py", line 1406, in process_commands
+    ctx = await self.get_context(message)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/ext/commands/bot.py", line 1305, in get_context
+    prefix = await self.get_prefix(origin)
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: EpicRPGBot.get_prefix() missing 1 required positional argument: 'message'
+2025-07-12 16:41:10,124 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-12 16:41:11,210 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-12 16:41:11,212 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-12 16:41:31,715 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-12 16:41:34,907 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-12 16:41:34,909 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-12 16:42:55,225 - discord.client - ERROR - Ignoring exception in on_message
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/client.py", line 481, in _run_event
+    await coro(*args, **kwargs)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/ext/commands/bot.py", line 1411, in on_message
+    await self.process_commands(message)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/ext/commands/bot.py", line 1406, in process_commands
+    ctx = await self.get_context(message)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/ext/commands/bot.py", line 1305, in get_context
+    prefix = await self.get_prefix(origin)
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: EpicRPGBot.get_prefix() missing 1 required positional argument: 'message'
+2025-07-12 16:42:58,242 - discord.client - ERROR - Ignoring exception in on_message
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/client.py", line 481, in _run_event
+    await coro(*args, **kwargs)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/ext/commands/bot.py", line 1411, in on_message
+    await self.process_commands(message)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/ext/commands/bot.py", line 1406, in process_commands
+    ctx = await self.get_context(message)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/ext/commands/bot.py", line 1305, in get_context
+    prefix = await self.get_prefix(origin)
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: EpicRPGBot.get_prefix() missing 1 required positional argument: 'message'
+2025-07-12 16:42:58,598 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-12 16:42:59,672 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-12 16:42:59,676 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-12 16:43:04,102 - discord.client - ERROR - Ignoring exception in on_message
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/client.py", line 481, in _run_event
+    await coro(*args, **kwargs)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/ext/commands/bot.py", line 1411, in on_message
+    await self.process_commands(message)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/ext/commands/bot.py", line 1406, in process_commands
+    ctx = await self.get_context(message)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/ext/commands/bot.py", line 1305, in get_context
+    prefix = await self.get_prefix(origin)
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: EpicRPGBot.get_prefix() missing 1 required positional argument: 'message'
+2025-07-12 16:46:07,632 - discord.client - ERROR - Ignoring exception in on_message
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/client.py", line 481, in _run_event
+    await coro(*args, **kwargs)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/ext/commands/bot.py", line 1411, in on_message
+    await self.process_commands(message)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/ext/commands/bot.py", line 1406, in process_commands
+    ctx = await self.get_context(message)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/ext/commands/bot.py", line 1305, in get_context
+    prefix = await self.get_prefix(origin)
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: EpicRPGBot.get_prefix() missing 1 required positional argument: 'message'
+2025-07-12 16:47:10,406 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-12 16:47:10,406 - discord.client - INFO - logging in using static token
+2025-07-12 16:47:10,863 - __main__ - INFO - Setting up bot...
+2025-07-12 16:47:11,040 - utils.database - INFO - Database initialization complete
+2025-07-12 16:47:11,044 - __main__ - ERROR - ❌ Failed to load cog admin: Extension 'admin' raised an error: ImportError: cannot import name 'format_duration' from 'utils.helpers' (/home/runner/workspace/utils/helpers.py)
+2025-07-12 16:47:11,046 - __main__ - ERROR - ❌ Failed to load cog moderation: Extension 'moderation' raised an error: ImportError: cannot import name 'format_duration' from 'utils.helpers' (/home/runner/workspace/utils/helpers.py)
+2025-07-12 16:47:11,058 - __main__ - INFO - ✅ Loaded cog: economy
+2025-07-12 16:47:11,065 - __main__ - INFO - ✅ Loaded cog: rpg_games
+2025-07-12 16:47:11,685 - ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-12 16:47:11,686 - __main__ - INFO - ✅ Loaded cog: ai_chatbot
+2025-07-12 16:47:11,689 - __main__ - INFO - ✅ Loaded cog: help
+2025-07-12 16:47:11,689 - web_server - INFO - ✅ Web server started on port 5000
+2025-07-12 16:47:11,694 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.31.128.155:5000
+2025-07-12 16:47:11,694 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-12 16:47:12,325 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 5258e43d8d49f3f314a2f60053846c05).
+2025-07-12 16:47:13,352 - werkzeug - INFO - 172.31.128.155 - - [12/Jul/2025 16:47:13] "GET / HTTP/1.1" 200 -
+2025-07-12 16:47:14,335 - __main__ - INFO - Bot is ready! Logged in as Kaala Billota#1815 (ID: 1392632915594055860)
+2025-07-12 16:47:14,335 - __main__ - INFO - Connected to 2 guilds
+2025-07-12 16:47:14,335 - __main__ - INFO - Syncing command tree...
+2025-07-12 16:47:15,143 - __main__ - INFO - ✅ Synced 14 slash commands globally
+2025-07-12 16:47:15,866 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-12 16:47:18,521 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-12 16:47:18,523 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-12 16:48:04,273 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-12 16:48:04,274 - discord.client - INFO - logging in using static token
+2025-07-12 16:48:04,729 - __main__ - INFO - Setting up bot...
+2025-07-12 16:48:04,829 - utils.database - INFO - Database initialization complete
+2025-07-12 16:48:04,834 - __main__ - ERROR - ❌ Failed to load cog admin: Extension 'admin' raised an error: ImportError: cannot import name 'get_user_data' from 'utils.database' (/home/runner/workspace/utils/database.py)
+2025-07-12 16:48:04,836 - __main__ - ERROR - ❌ Failed to load cog moderation: Extension 'moderation' raised an error: ImportError: cannot import name 'get_user_data' from 'utils.database' (/home/runner/workspace/utils/database.py)
+2025-07-12 16:48:04,846 - __main__ - INFO - ✅ Loaded cog: economy
+2025-07-12 16:48:04,851 - __main__ - INFO - ✅ Loaded cog: rpg_games
+2025-07-12 16:48:05,755 - ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-12 16:48:05,757 - __main__ - INFO - ✅ Loaded cog: ai_chatbot
+2025-07-12 16:48:05,762 - __main__ - INFO - ✅ Loaded cog: help
+2025-07-12 16:48:05,764 - web_server - INFO - ✅ Web server started on port 5000
+2025-07-12 16:48:05,766 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.31.128.155:5000
+2025-07-12 16:48:05,767 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-12 16:48:06,104 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: c29c88dbfdf53efa7992337e8b8a6c4c).
+2025-07-12 16:48:06,691 - werkzeug - INFO - 172.31.128.155 - - [12/Jul/2025 16:48:06] "GET / HTTP/1.1" 200 -
+2025-07-12 16:48:08,116 - __main__ - INFO - Bot is ready! Logged in as Kaala Billota#1815 (ID: 1392632915594055860)
+2025-07-12 16:48:08,116 - __main__ - INFO - Connected to 2 guilds
+2025-07-12 16:48:08,117 - __main__ - INFO - Syncing command tree...
+2025-07-12 16:48:08,481 - __main__ - INFO - ✅ Synced 14 slash commands globally
+2025-07-12 16:49:18,687 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-12 16:49:18,688 - discord.client - INFO - logging in using static token
+2025-07-12 16:49:19,137 - __main__ - INFO - Setting up bot...
+2025-07-12 16:49:19,239 - utils.database - INFO - Database initialization complete
+2025-07-12 16:49:19,242 - __main__ - INFO - ✅ Loaded cog: admin
+2025-07-12 16:49:19,246 - __main__ - INFO - ✅ Loaded cog: moderation
+2025-07-12 16:49:19,248 - __main__ - INFO - ✅ Loaded cog: economy
+2025-07-12 16:49:19,250 - __main__ - INFO - ✅ Loaded cog: rpg_games
+2025-07-12 16:49:19,875 - ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-12 16:49:19,875 - __main__ - INFO - ✅ Loaded cog: ai_chatbot
+2025-07-12 16:49:19,877 - __main__ - INFO - ✅ Loaded cog: help
+2025-07-12 16:49:19,877 - web_server - INFO - ✅ Web server started on port 5000
+2025-07-12 16:49:19,880 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.31.128.155:5000
+2025-07-12 16:49:19,881 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-12 16:49:20,167 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: db10b05b33eb2c1f63f4ece2e9278f00).
+2025-07-12 16:49:20,783 - werkzeug - INFO - 172.31.128.155 - - [12/Jul/2025 16:49:20] "GET / HTTP/1.1" 200 -
+2025-07-12 16:49:22,179 - __main__ - INFO - Bot is ready! Logged in as Kaala Billota#1815 (ID: 1392632915594055860)
+2025-07-12 16:49:22,180 - __main__ - INFO - Connected to 2 guilds
+2025-07-12 16:49:22,180 - __main__ - INFO - Syncing command tree...
+2025-07-12 16:49:22,531 - __main__ - INFO - ✅ Synced 24 slash commands globally
+2025-07-12 16:49:28,854 - werkzeug - INFO - 127.0.0.1 - - [12/Jul/2025 16:49:28] "GET / HTTP/1.1" 200 -
+2025-07-12 16:51:35,475 - werkzeug - INFO - 127.0.0.1 - - [12/Jul/2025 16:51:35] "GET /health HTTP/1.1" 200 -
+2025-07-12 16:51:45,205 - werkzeug - INFO - 127.0.0.1 - - [12/Jul/2025 16:51:45] "GET /health HTTP/1.1" 200 -
+2025-07-12 16:52:00,382 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-12 16:52:00,382 - discord.client - INFO - logging in using static token
+2025-07-12 16:52:00,915 - __main__ - INFO - Setting up bot...
+2025-07-12 16:52:01,016 - utils.database - INFO - Database initialization complete
+2025-07-12 16:52:01,019 - __main__ - INFO - ✅ Loaded cog: admin
+2025-07-12 16:52:01,022 - __main__ - INFO - ✅ Loaded cog: moderation
+2025-07-12 16:52:01,024 - __main__ - INFO - ✅ Loaded cog: economy
+2025-07-12 16:52:01,026 - __main__ - INFO - ✅ Loaded cog: rpg_games
+2025-07-12 16:52:01,735 - ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-12 16:52:01,735 - __main__ - INFO - ✅ Loaded cog: ai_chatbot
+2025-07-12 16:52:01,737 - __main__ - INFO - ✅ Loaded cog: help
+2025-07-12 16:52:01,737 - web_server - INFO - ✅ Web server started on port 5000
+2025-07-12 16:52:01,743 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.31.128.155:5000
+2025-07-12 16:52:01,744 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-12 16:52:02,213 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 52659d178bdb24c951c11cddf092b86b).
+2025-07-12 16:52:03,507 - werkzeug - INFO - 172.31.128.155 - - [12/Jul/2025 16:52:03] "GET / HTTP/1.1" 200 -
+2025-07-12 16:52:04,226 - __main__ - INFO - Bot is ready! Logged in as Kaala Billota#1815 (ID: 1392632915594055860)
+2025-07-12 16:52:04,226 - __main__ - INFO - Connected to 2 guilds
+2025-07-12 16:52:04,227 - __main__ - INFO - Syncing command tree...
+2025-07-12 16:52:04,529 - __main__ - INFO - ✅ Synced 0 slash commands globally
+2025-07-12 16:52:06,029 - __main__ - INFO - ✅ Synced 0 commands to guild Aesthetic Template 2
+2025-07-12 16:52:06,207 - __main__ - INFO - ✅ Synced 0 commands to guild 𝖬𝖾𝗈𝗐𝗍𝗈𝗉𝗂𝖺
+2025-07-12 16:52:59,873 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-12 16:52:59,874 - discord.client - INFO - logging in using static token
+2025-07-12 16:53:00,361 - __main__ - INFO - Setting up bot...
+2025-07-12 16:53:00,458 - utils.database - INFO - Database initialization complete
+2025-07-12 16:53:00,461 - __main__ - INFO - ✅ Loaded cog: admin
+2025-07-12 16:53:00,463 - __main__ - INFO - ✅ Loaded cog: moderation
+2025-07-12 16:53:00,465 - __main__ - INFO - ✅ Loaded cog: economy
+2025-07-12 16:53:00,467 - __main__ - INFO - ✅ Loaded cog: rpg_games
+2025-07-12 16:53:01,072 - ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-12 16:53:01,073 - __main__ - INFO - ✅ Loaded cog: ai_chatbot
+2025-07-12 16:53:01,074 - __main__ - INFO - ✅ Loaded cog: help
+2025-07-12 16:53:01,074 - web_server - INFO - ✅ Web server started on port 5000
+2025-07-12 16:53:01,078 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.31.128.155:5000
+2025-07-12 16:53:01,078 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-12 16:53:01,398 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 146f441ca13175c71fc74c7ff98164c6).
+2025-07-12 16:53:02,319 - werkzeug - INFO - 172.31.128.155 - - [12/Jul/2025 16:53:02] "GET / HTTP/1.1" 200 -
+2025-07-12 16:53:03,409 - __main__ - INFO - Bot is ready! Logged in as Kaala Billota#1815 (ID: 1392632915594055860)
+2025-07-12 16:53:03,409 - __main__ - INFO - Connected to 2 guilds
+2025-07-12 16:53:03,410 - __main__ - INFO - Syncing command tree...
+2025-07-12 16:53:04,029 - __main__ - INFO - ✅ Synced 24 slash commands globally
+2025-07-12 16:53:17,785 - werkzeug - INFO - 127.0.0.1 - - [12/Jul/2025 16:53:17] "GET /health HTTP/1.1" 200 -
+2025-07-12 16:53:48,807 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-12 16:53:48,807 - discord.client - INFO - logging in using static token
+2025-07-12 16:53:49,198 - __main__ - INFO - Setting up bot...
+2025-07-12 16:53:49,302 - utils.database - INFO - Database initialization complete
+2025-07-12 16:53:49,306 - __main__ - INFO - ✅ Loaded cog: admin
+2025-07-12 16:53:49,310 - __main__ - INFO - ✅ Loaded cog: moderation
+2025-07-12 16:53:49,312 - __main__ - INFO - ✅ Loaded cog: economy
+2025-07-12 16:53:49,316 - __main__ - INFO - ✅ Loaded cog: rpg_games
+2025-07-12 16:53:49,972 - ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-12 16:53:49,973 - __main__ - INFO - ✅ Loaded cog: ai_chatbot
+2025-07-12 16:53:49,974 - __main__ - INFO - ✅ Loaded cog: help
+2025-07-12 16:53:49,975 - web_server - INFO - ✅ Web server started on port 5000
+2025-07-12 16:53:49,980 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.31.128.155:5000
+2025-07-12 16:53:49,981 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-12 16:53:50,280 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 7c9bf741eb6ca939aeb733f307c693b7).
+2025-07-12 16:53:50,859 - werkzeug - INFO - 172.31.128.155 - - [12/Jul/2025 16:53:50] "GET / HTTP/1.1" 200 -
+2025-07-12 16:53:52,291 - __main__ - INFO - Bot is ready! Logged in as Kaala Billota#1815 (ID: 1392632915594055860)
+2025-07-12 16:53:52,292 - __main__ - INFO - Connected to 2 guilds
+2025-07-12 16:53:52,292 - __main__ - INFO - Syncing command tree...
+2025-07-12 16:53:52,584 - __main__ - INFO - ✅ Synced 24 slash commands globally
+2025-07-12 16:54:08,799 - werkzeug - INFO - 127.0.0.1 - - [12/Jul/2025 16:54:08] "GET /health HTTP/1.1" 200 -
+2025-07-12 18:16:04,092 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-12 18:16:04,093 - discord.client - INFO - logging in using static token
+2025-07-12 18:16:04,568 - __main__ - INFO - Setting up bot...
+2025-07-12 18:16:04,665 - utils.database - INFO - Database initialization complete
+2025-07-12 18:16:04,676 - __main__ - INFO - ✅ Loaded cog: admin
+2025-07-12 18:16:04,684 - __main__ - INFO - ✅ Loaded cog: moderation
+2025-07-12 18:16:04,692 - __main__ - INFO - ✅ Loaded cog: economy
+2025-07-12 18:16:04,697 - __main__ - INFO - ✅ Loaded cog: rpg_games
+2025-07-12 18:16:05,791 - ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-12 18:16:05,792 - __main__ - INFO - ✅ Loaded cog: ai_chatbot
+2025-07-12 18:16:05,794 - __main__ - INFO - ✅ Loaded cog: help
+2025-07-12 18:16:05,795 - web_server - INFO - ✅ Web server started on port 5000
+2025-07-12 18:16:05,802 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.31.128.58:5000
+2025-07-12 18:16:05,802 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-12 18:16:06,211 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: b890c8401615db55fcb3b95a6bd8f584).
+2025-07-12 18:16:07,630 - werkzeug - INFO - 172.31.128.58 - - [12/Jul/2025 18:16:07] "GET / HTTP/1.1" 200 -
+2025-07-12 18:16:08,222 - __main__ - INFO - Bot is ready! Logged in as Kaala Billota#1815 (ID: 1392632915594055860)
+2025-07-12 18:16:08,224 - __main__ - INFO - Connected to 2 guilds
+2025-07-12 18:16:08,224 - __main__ - INFO - Syncing command tree...
+2025-07-12 18:16:08,523 - __main__ - INFO - ✅ Synced 24 slash commands globally
+2025-07-12 18:16:17,949 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-12 18:16:20,370 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-12 18:16:20,372 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-12 18:22:04,753 - werkzeug - INFO - 172.31.128.58 - - [12/Jul/2025 18:22:04] "GET / HTTP/1.1" 200 -
+2025-07-12 18:26:51,018 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-12 18:26:51,018 - web_server - INFO - Starting web server on port 5000
+2025-07-12 18:26:51,027 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-12 18:26:51,037 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-12 18:26:51,044 - __main__ - INFO - Loaded cog: cogs.economy
+2025-07-12 18:26:51,086 - __main__ - INFO - Loaded cog: cogs.rpg_games
+2025-07-12 18:26:51,711 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-12 18:26:51,711 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-12 18:26:51,712 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-12 18:26:51,712 - discord.client - INFO - logging in using static token
+2025-07-12 18:26:52,525 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 8603cffdfd94d97fa4cd610021d95f33).
+2025-07-12 18:26:54,539 - __main__ - INFO - Kaala Billota#1815 has connected to Discord!
+2025-07-12 18:26:54,539 - __main__ - INFO - Bot is in 2 guilds
+2025-07-12 18:26:54,652 - utils.database - INFO - Database initialization complete
+2025-07-12 18:26:54,652 - __main__ - INFO - Database initialized successfully
+2025-07-12 18:26:54,652 - __main__ - ERROR - Error in event on_ready: ()
+2025-07-12 18:27:28,872 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-12 18:27:29,849 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-12 18:27:29,851 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-12 18:30:50,288 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-12 18:30:52,872 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-12 18:30:52,873 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-12 18:31:20,171 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-12 18:31:20,172 - web_server - INFO - Starting web server on port 5000
+2025-07-12 18:31:20,177 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-12 18:31:20,179 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-12 18:31:20,181 - __main__ - INFO - Loaded cog: cogs.economy
+2025-07-12 18:31:20,189 - __main__ - INFO - Loaded cog: cogs.rpg_games
+2025-07-12 18:31:20,826 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-12 18:31:20,827 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-12 18:31:20,829 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-12 18:31:20,830 - discord.client - INFO - logging in using static token
+2025-07-12 18:31:21,605 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 73586e1479fdee6ccbe6e0eb87903ca5).
+2025-07-12 18:31:23,619 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-12 18:31:23,620 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-12 18:31:23,737 - utils.database - INFO - Database initialization complete
+2025-07-12 18:31:23,737 - __main__ - INFO - Database initialized successfully
+2025-07-12 18:31:23,737 - __main__ - ERROR - Error in event on_ready: ()
+2025-07-12 18:33:42,196 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-12 18:33:44,885 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-12 18:33:44,887 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-12 18:34:54,287 - utils.database - INFO - Created new user profile for 1297013439125917766
+2025-07-12 18:42:04,404 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-12 18:42:04,405 - web_server - INFO - Starting web server on port 5000
+2025-07-12 18:42:04,409 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-12 18:42:04,417 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-12 18:42:04,427 - __main__ - INFO - Loaded cog: cogs.economy
+2025-07-12 18:42:04,437 - __main__ - ERROR - Failed to load cog cogs.rpg_games: Extension 'cogs.rpg_games' raised an error: CommandRegistrationError: The command work is already an existing command or alias.
+2025-07-12 18:42:05,268 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-12 18:42:05,269 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-12 18:42:05,270 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-12 18:42:05,270 - discord.client - INFO - logging in using static token
+2025-07-12 18:42:05,982 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 700c1cc43b1a8fa19101745660a4dcd3).
+2025-07-12 18:42:08,005 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-12 18:42:08,005 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-12 18:42:08,114 - utils.database - INFO - Database initialization complete
+2025-07-12 18:42:08,114 - __main__ - INFO - Database initialized successfully
+2025-07-12 18:42:08,114 - __main__ - ERROR - Error in event on_ready: ()
+2025-07-12 18:42:17,423 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-12 18:42:19,769 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-12 18:42:19,771 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-12 18:44:14,023 - __main__ - INFO - Joined new guild: 𝖬𝖾𝗈𝗐𝗍𝗈𝗉𝗂𝖺 (1391177808885321879)
+2025-07-12 18:46:03,915 - __main__ - INFO - Joined new guild: 𝖬𝖾𝗈𝗐𝗍𝗈𝗉𝗂𝖺 (1391177808885321879)
+2025-07-12 18:57:10,043 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-12 18:57:10,044 - web_server - INFO - Starting web server on port 5000
+2025-07-12 18:57:10,051 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-12 18:57:10,061 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-12 18:57:10,071 - __main__ - INFO - Loaded cog: cogs.economy
+2025-07-12 18:57:10,086 - __main__ - ERROR - Failed to load cog cogs.rpg_games: Extension 'cogs.rpg_games' raised an error: CommandRegistrationError: The command work is already an existing command or alias.
+2025-07-12 18:57:11,047 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-12 18:57:11,047 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-12 18:57:11,049 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-12 18:57:11,049 - discord.client - INFO - logging in using static token
+2025-07-12 18:57:12,241 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 67efa703f0ae8331b6a1e468637d5e88).
+2025-07-12 18:57:14,254 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-12 18:57:14,254 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-12 18:57:14,366 - utils.database - INFO - Database initialization complete
+2025-07-12 18:57:14,368 - __main__ - INFO - Database initialized successfully
+2025-07-12 18:57:14,368 - __main__ - ERROR - Error in event on_ready: ()
+2025-07-12 18:57:32,176 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-12 18:57:34,059 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-12 18:57:34,061 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-12 18:58:30,672 - discord.app_commands.tree - ERROR - Ignoring exception in command tree
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/app_commands/tree.py", line 1151, in wrapper
+    await self._call(interaction)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/app_commands/tree.py", line 1283, in _call
+    command, options = self._get_app_command_options(data)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/app_commands/tree.py", line 1187, in _get_app_command_options
+    raise CommandNotFound(name, parents)
+discord.app_commands.errors.CommandNotFound: Application command 'profile' not found
+2025-07-12 19:03:12,794 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-12 19:03:12,795 - web_server - INFO - Starting web server on port 5000
+2025-07-12 19:03:12,797 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-12 19:03:12,800 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-12 19:03:12,806 - __main__ - INFO - Loaded cog: cogs.economy
+2025-07-12 19:03:12,820 - __main__ - ERROR - Failed to load cog cogs.rpg_games: Extension 'cogs.rpg_games' raised an error: CommandRegistrationError: The command daily is already an existing command or alias.
+2025-07-12 19:03:13,453 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-12 19:03:13,453 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-12 19:03:13,454 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-12 19:03:13,454 - discord.client - INFO - logging in using static token
+2025-07-12 19:03:14,218 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 2f1526276344fc621ec3224c0f70af7f).
+2025-07-12 19:03:16,233 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-12 19:03:16,236 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-12 19:03:16,351 - utils.database - INFO - Database initialization complete
+2025-07-12 19:03:16,351 - __main__ - INFO - Database initialized successfully
+2025-07-12 19:03:16,351 - __main__ - ERROR - Error adding HelpView: HelpView.__init__() missing 2 required positional arguments: 'bot' and 'user'
+2025-07-13 01:39:52,145 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-13 01:39:52,146 - web_server - INFO - Starting web server on port 5000
+2025-07-13 01:39:52,152 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-13 01:39:52,169 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-13 01:39:52,185 - __main__ - INFO - Loaded cog: cogs.economy
+2025-07-13 01:39:52,196 - __main__ - ERROR - Failed to load cog cogs.rpg_games: Extension 'cogs.rpg_games' raised an error: CommandRegistrationError: The command daily is already an existing command or alias.
+2025-07-13 01:39:53,449 - cogs.ai_chatbot - WARNING - ⚠️ GEMINI_API_KEY not found in environment variables
+2025-07-13 01:39:53,449 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-13 01:39:53,454 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-13 01:39:53,454 - __main__ - ERROR - DISCORD_TOKEN not found in environment variables!
+2025-07-13 01:41:32,003 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-13 01:41:32,004 - web_server - INFO - Starting web server on port 5000
+2025-07-13 01:41:32,007 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-13 01:41:32,009 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-13 01:41:32,012 - __main__ - INFO - Loaded cog: cogs.economy
+2025-07-13 01:41:32,014 - __main__ - ERROR - Failed to load cog cogs.rpg_games: Extension 'cogs.rpg_games' raised an error: CommandRegistrationError: The command daily is already an existing command or alias.
+2025-07-13 01:41:32,711 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-13 01:41:32,712 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-13 01:41:32,713 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-13 01:41:32,713 - discord.client - INFO - logging in using static token
+2025-07-13 01:41:34,224 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 1bce83ac6306f1197b44cfc921faadec).
+2025-07-13 01:41:36,468 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-13 01:41:36,469 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-13 01:41:37,099 - utils.database - INFO - Database initialization complete
+2025-07-13 01:41:37,099 - __main__ - INFO - Database initialized successfully
+2025-07-13 01:41:37,099 - __main__ - ERROR - Error adding HelpView: HelpView.__init__() missing 2 required positional arguments: 'bot' and 'user'
+2025-07-13 01:41:54,262 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-13 01:41:57,322 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-13 01:41:57,324 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-13 01:42:06,571 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-13 01:42:09,461 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-13 01:42:09,462 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-13 01:42:20,112 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-13 01:42:25,296 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-13 01:42:25,297 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-13 01:42:35,954 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-13 01:42:39,446 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-13 01:42:39,447 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-13 01:43:19,842 - discord.app_commands.tree - ERROR - Ignoring exception in command tree
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/app_commands/tree.py", line 1151, in wrapper
+    await self._call(interaction)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/app_commands/tree.py", line 1283, in _call
+    command, options = self._get_app_command_options(data)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/app_commands/tree.py", line 1187, in _get_app_command_options
+    raise CommandNotFound(name, parents)
+discord.app_commands.errors.CommandNotFound: Application command 'pay' not found
+2025-07-13 01:43:39,765 - utils.database - INFO - Created new user profile for 1297013439125917766
+2025-07-13 01:43:47,341 - discord.app_commands.tree - ERROR - Ignoring exception in command 'balance'
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/app_commands/commands.py", line 857, in _do_call
+    return await self._callback(self.binding, interaction, **params)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/cogs/economy.py", line 300, in balance_slash
+    await interaction.response.send_message(embed=embed)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/interactions.py", line 1004, in send_message
+    response = await adapter.create_interaction_response(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/webhook/async_.py", line 224, in request
+    raise NotFound(response, data)
+discord.errors.NotFound: 404 Not Found (error code: 10062): Unknown interaction
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/app_commands/tree.py", line 1310, in _call
+    await command._invoke_with_namespace(interaction, namespace)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/app_commands/commands.py", line 883, in _invoke_with_namespace
+    return await self._do_call(interaction, transformed_values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/app_commands/commands.py", line 876, in _do_call
+    raise CommandInvokeError(self, e) from e
+discord.app_commands.errors.CommandInvokeError: Command 'balance' raised an exception: NotFound: 404 Not Found (error code: 10062): Unknown interaction
+2025-07-13 01:45:04,695 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-13 01:45:06,792 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-13 01:45:06,794 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-13 01:45:38,939 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-13 01:45:43,522 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-13 01:45:43,523 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-13 01:46:04,616 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-13 01:46:09,124 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-13 01:46:09,126 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-13 01:57:23,239 - discord.app_commands.tree - ERROR - Ignoring exception in command tree
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/app_commands/tree.py", line 1151, in wrapper
+    await self._call(interaction)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/app_commands/tree.py", line 1283, in _call
+    command, options = self._get_app_command_options(data)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/app_commands/tree.py", line 1187, in _get_app_command_options
+    raise CommandNotFound(name, parents)
+discord.app_commands.errors.CommandNotFound: Application command 'pay' not found
+2025-07-13 02:00:52,922 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-13 02:00:52,927 - web_server - INFO - Starting web server on port 5000
+2025-07-13 02:00:52,933 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-13 02:00:52,936 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-13 02:00:52,938 - __main__ - INFO - Loaded cog: cogs.economy
+2025-07-13 02:00:52,963 - __main__ - ERROR - Failed to load cog cogs.rpg_games: Extension 'cogs.rpg_games' raised an error: CommandRegistrationError: The command shop is already an existing command or alias.
+2025-07-13 02:00:53,640 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-13 02:00:53,640 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-13 02:00:53,641 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-13 02:00:53,641 - discord.client - INFO - logging in using static token
+2025-07-13 02:00:55,257 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: bdf7aa6a837a1e4b7fa698e7600bb494).
+2025-07-13 02:00:57,328 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-13 02:00:57,329 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-13 02:00:57,649 - utils.database - INFO - Database initialization complete
+2025-07-13 02:00:57,649 - __main__ - INFO - Database initialized successfully
+2025-07-13 02:00:57,649 - __main__ - ERROR - Error adding HelpView: HelpView.__init__() missing 2 required positional arguments: 'bot' and 'user'
+2025-07-13 02:01:46,721 - discord.app_commands.tree - ERROR - Ignoring exception in command tree
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/app_commands/tree.py", line 1151, in wrapper
+    await self._call(interaction)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/app_commands/tree.py", line 1283, in _call
+    command, options = self._get_app_command_options(data)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/discord/app_commands/tree.py", line 1187, in _get_app_command_options
+    raise CommandNotFound(name, parents)
+discord.app_commands.errors.CommandNotFound: Application command 'pay' not found
+2025-07-13 02:06:59,373 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-13 02:06:59,374 - web_server - INFO - Starting web server on port 5000
+2025-07-13 02:06:59,377 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-13 02:06:59,390 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-13 02:06:59,412 - __main__ - INFO - Loaded cog: cogs.rpg_games
+2025-07-13 02:07:00,193 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-13 02:07:00,194 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-13 02:07:00,195 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-13 02:07:00,195 - discord.client - INFO - logging in using static token
+2025-07-13 02:07:01,752 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: d8d45dbbbbf81fe0b3936e5fd5801553).
+2025-07-13 02:07:03,846 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-13 02:07:03,846 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-13 02:07:04,210 - utils.database - INFO - Database initialization complete
+2025-07-13 02:07:04,211 - __main__ - INFO - Database initialized successfully
+2025-07-13 02:13:01,275 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-13 02:13:01,276 - web_server - INFO - Starting web server on port 5000
+2025-07-13 02:13:01,278 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-13 02:13:01,282 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-13 02:13:01,288 - __main__ - INFO - Loaded cog: cogs.rpg_games
+2025-07-13 02:13:01,984 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-13 02:13:01,985 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-13 02:13:01,986 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-13 02:13:01,986 - discord.client - INFO - logging in using static token
+2025-07-13 02:13:03,483 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 3ef667d18032027fa6978865b81e651b).
+2025-07-13 02:13:05,717 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-13 02:13:05,717 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-13 02:13:06,042 - utils.database - INFO - Database initialization complete
+2025-07-13 02:13:06,043 - __main__ - INFO - Database initialized successfully
+2025-07-13 04:24:27,949 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-13 04:24:27,952 - web_server - INFO - Starting web server on port 5000
+2025-07-13 04:24:27,959 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-13 04:24:27,968 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-13 04:24:27,989 - __main__ - INFO - Loaded cog: cogs.rpg_games
+2025-07-13 04:24:29,423 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-13 04:24:29,423 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-13 04:24:29,425 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-13 04:24:29,425 - discord.client - INFO - logging in using static token
+2025-07-13 04:24:30,971 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: a7c0d657d590c07e8e62df976c6dfd85).
+2025-07-13 04:24:33,225 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-13 04:24:33,225 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-13 04:24:34,055 - utils.database - INFO - Database initialization complete
+2025-07-13 04:24:34,055 - __main__ - INFO - Database initialized successfully
+2025-07-13 04:34:44,253 - utils.database - INFO - Created new user profile for 1297013439125917766
+2025-07-13 04:40:56,615 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-13 04:40:56,618 - web_server - INFO - Starting web server on port 5000
+2025-07-13 04:40:56,622 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-13 04:40:56,626 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-13 04:40:56,719 - __main__ - ERROR - Failed to load cog cogs.rpg_games: Extension 'cogs.rpg_games' raised an error: ImportError: cannot import name 'WEAPONS' from 'utils.constants' (/home/runner/workspace/utils/constants.py)
+2025-07-13 04:40:58,202 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-13 04:40:58,203 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-13 04:40:58,205 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-13 04:40:58,205 - discord.client - INFO - logging in using static token
+2025-07-13 04:40:59,716 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 54f96eb89ddfa8c3e13493d758889086).
+2025-07-13 04:41:01,942 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-13 04:41:01,942 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-13 04:41:02,248 - utils.database - INFO - Database initialization complete
+2025-07-13 04:41:02,248 - __main__ - INFO - Database initialized successfully
+2025-07-13 04:48:32,618 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-13 04:48:32,620 - web_server - INFO - Starting web server on port 5000
+2025-07-13 04:48:32,625 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-13 04:48:32,629 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-13 04:48:32,651 - __main__ - INFO - Loaded cog: cogs.rpg_games
+2025-07-13 04:48:33,787 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-13 04:48:33,788 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-13 04:48:33,789 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-13 04:48:33,790 - discord.client - INFO - logging in using static token
+2025-07-13 04:48:35,325 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 38d4affe9ebcef5e4704f89840b6e283).
+2025-07-13 04:48:37,413 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-13 04:48:37,415 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-13 04:48:37,710 - utils.database - INFO - Database initialization complete
+2025-07-13 04:48:37,710 - __main__ - INFO - Database initialized successfully
+2025-07-13 04:50:25,928 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-13 04:50:25,928 - web_server - INFO - Starting web server on port 5000
+2025-07-13 04:50:25,931 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-13 04:50:25,934 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-13 04:50:25,942 - __main__ - INFO - Loaded cog: cogs.rpg_games
+2025-07-13 04:50:26,583 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-13 04:50:26,584 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-13 04:50:26,585 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-13 04:50:26,585 - discord.client - INFO - logging in using static token
+2025-07-13 04:50:28,144 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 9e8480234e0c97e8f276f99bb38ba2a5).
+2025-07-13 04:50:30,425 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-13 04:50:30,425 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-13 04:50:30,723 - utils.database - INFO - Database initialization complete
+2025-07-13 04:50:30,724 - __main__ - INFO - Database initialized successfully
+2025-07-13 04:51:37,929 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-13 04:51:37,931 - web_server - INFO - Starting web server on port 5000
+2025-07-13 04:51:37,950 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-13 04:51:37,955 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-13 04:51:37,974 - __main__ - INFO - Loaded cog: cogs.rpg_games
+2025-07-13 04:51:38,909 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-13 04:51:38,910 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-13 04:51:38,912 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-13 04:51:38,912 - discord.client - INFO - logging in using static token
+2025-07-13 04:51:40,400 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: afdbfe7627ad832e30341b7782a7f629).
+2025-07-13 04:51:42,453 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-13 04:51:42,455 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-13 04:51:42,778 - utils.database - INFO - Database initialization complete
+2025-07-13 04:51:42,779 - __main__ - INFO - Database initialized successfully
+2025-07-13 04:53:57,452 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-13 04:53:57,453 - web_server - INFO - Starting web server on port 5000
+2025-07-13 04:53:57,456 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-13 04:53:57,458 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-13 04:53:57,465 - __main__ - INFO - Loaded cog: cogs.rpg_games
+2025-07-13 04:53:58,185 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-13 04:53:58,185 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-13 04:53:58,186 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-13 04:53:58,186 - discord.client - INFO - logging in using static token
+2025-07-13 04:53:59,756 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 9a5b57c66725e332f1eee1a67318dce8).
+2025-07-13 04:54:02,003 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-13 04:54:02,003 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-13 04:54:02,347 - utils.database - INFO - Database initialization complete
+2025-07-13 04:54:02,347 - __main__ - INFO - Database initialized successfully
+2025-07-13 05:01:46,906 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-13 05:01:46,907 - web_server - INFO - Starting web server on port 5000
+2025-07-13 05:01:46,909 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-13 05:01:46,915 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-13 05:01:46,965 - __main__ - INFO - Loaded cog: cogs.rpg_games
+2025-07-13 05:01:47,694 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-13 05:01:47,695 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-13 05:01:47,696 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-13 05:01:47,696 - discord.client - INFO - logging in using static token
+2025-07-13 05:01:49,371 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 249862f034bea328db2c616c025eaad3).
+2025-07-13 05:01:51,468 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-13 05:01:51,468 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-13 05:01:51,800 - utils.database - INFO - Database initialization complete
+2025-07-13 05:01:51,800 - __main__ - INFO - Database initialized successfully
+2025-07-13 05:04:13,056 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-13 05:04:13,086 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-13 05:04:13,094 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-13 05:04:16,179 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-13 05:04:16,182 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-13 05:04:17,062 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-13 05:04:17,064 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-13 05:04:17,615 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-13 05:04:17,616 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-13 05:09:06,636 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-13 05:09:06,639 - web_server - INFO - Starting web server on port 5000
+2025-07-13 05:09:06,640 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-13 05:09:06,644 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-13 05:09:06,674 - __main__ - ERROR - Failed to load cog cogs.rpg_games: Extension 'cogs.rpg_games' raised an error: SyntaxError: unterminated string literal (detected at line 699) (constants.py, line 699)
+2025-07-13 05:09:07,303 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-13 05:09:07,303 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-13 05:09:07,304 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-13 05:09:07,305 - discord.client - INFO - logging in using static token
+2025-07-13 05:09:08,952 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 32cc6798f737de3d322daedc29da1532).
+2025-07-13 05:09:11,047 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-13 05:09:11,048 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-13 05:09:11,370 - utils.database - INFO - Database initialization complete
+2025-07-13 05:09:11,371 - __main__ - INFO - Database initialized successfully
+2025-07-13 05:12:28,688 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-13 05:12:28,689 - web_server - INFO - Starting web server on port 5000
+2025-07-13 05:12:28,692 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-13 05:12:28,695 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-13 05:12:28,699 - __main__ - ERROR - Failed to load cog cogs.rpg_games: Extension 'cogs.rpg_games' raised an error: SyntaxError: unterminated string literal (detected at line 699) (constants.py, line 699)
+2025-07-13 05:12:29,453 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-13 05:12:29,453 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-13 05:12:29,455 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-13 05:12:29,455 - discord.client - INFO - logging in using static token
+2025-07-13 05:12:30,935 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: f061d162a9b186c9f1114658ae0fc4fa).
+2025-07-13 05:12:33,025 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-13 05:12:33,025 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-13 05:12:33,333 - utils.database - INFO - Database initialization complete
+2025-07-13 05:12:33,333 - __main__ - INFO - Database initialized successfully
+2025-07-13 18:26:03,786 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-13 18:26:03,787 - web_server - INFO - Starting web server on port 5000
+2025-07-13 18:26:03,794 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-13 18:26:03,798 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-13 18:26:03,810 - __main__ - ERROR - Failed to load cog cogs.rpg_games: Extension 'cogs.rpg_games' raised an error: SyntaxError: unterminated string literal (detected at line 699) (constants.py, line 699)
+2025-07-13 18:26:04,914 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-13 18:26:04,914 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-13 18:26:04,915 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-13 18:26:04,916 - discord.client - INFO - logging in using static token
+2025-07-13 18:26:06,367 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: e43520ffc1f8ca2d8b637d7c59f13a93).
+2025-07-13 18:26:08,459 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-13 18:26:08,461 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-13 18:26:08,794 - utils.database - INFO - Database initialization complete
+2025-07-13 18:26:08,794 - __main__ - INFO - Database initialized successfully
+2025-07-13 18:26:47,881 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-13 18:26:50,880 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-13 18:26:50,882 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-13 18:30:49,917 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-13 18:30:49,929 - web_server - INFO - Starting web server on port 5000
+2025-07-13 18:30:49,938 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-13 18:30:49,941 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-13 18:30:50,010 - __main__ - INFO - Loaded cog: cogs.rpg_games
+2025-07-13 18:30:50,725 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-13 18:30:50,725 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-13 18:30:50,727 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-13 18:30:50,727 - discord.client - INFO - logging in using static token
+2025-07-13 18:30:53,323 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: d561d90430141506e76cdb2df8a56f50).
+2025-07-13 18:30:55,412 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-13 18:30:55,412 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-13 18:30:55,707 - utils.database - INFO - Database initialization complete
+2025-07-13 18:30:55,707 - __main__ - INFO - Database initialized successfully
+2025-07-13 18:50:24,059 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-13 18:50:24,060 - web_server - INFO - Starting web server on port 5000
+2025-07-13 18:50:24,064 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-13 18:50:24,069 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-13 18:50:24,147 - __main__ - INFO - Loaded cog: cogs.rpg_games
+2025-07-13 18:50:25,316 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-13 18:50:25,316 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-13 18:50:25,318 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-13 18:50:25,318 - discord.client - INFO - logging in using static token
+2025-07-13 18:50:26,871 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: a43edbfc26f16564d96032223d4edbde).
+2025-07-13 18:50:28,904 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-13 18:50:28,905 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-13 18:50:29,203 - utils.database - INFO - Database initialization complete
+2025-07-13 18:50:29,204 - __main__ - INFO - Database initialized successfully
+2025-07-13 19:22:16,869 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-13 19:22:21,714 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-13 19:22:21,715 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-13 19:22:31,886 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-13 19:22:34,558 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-13 19:22:34,559 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-13 19:22:51,302 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-13 19:22:54,137 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-13 19:22:54,138 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-13 19:25:13,225 - utils.database - INFO - Created new user profile for 1270306976873578578
+2025-07-13 19:27:28,594 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-13 19:27:31,992 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-13 19:27:31,994 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-13 19:29:06,346 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-13 19:29:11,464 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-13 19:29:11,465 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-13 19:29:37,312 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-13 19:29:40,649 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-13 19:29:40,651 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-13 19:30:19,464 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-13 19:30:22,652 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-13 19:30:22,654 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-13 19:32:59,227 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-13 19:32:59,228 - web_server - INFO - Starting web server on port 5000
+2025-07-13 19:32:59,231 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-13 19:32:59,234 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-13 19:32:59,310 - __main__ - INFO - Loaded cog: cogs.rpg_games
+2025-07-13 19:33:00,310 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-13 19:33:00,311 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-13 19:33:00,312 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-13 19:33:00,312 - discord.client - INFO - logging in using static token
+2025-07-13 19:33:01,825 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 8a77936da3aec316417e834814786b6f).
+2025-07-13 19:33:04,030 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-13 19:33:04,030 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-13 19:33:04,301 - utils.database - INFO - Database initialization complete
+2025-07-13 19:33:04,301 - __main__ - INFO - Database initialized successfully
+2025-07-20 08:31:25,145 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-20 08:31:25,146 - web_server - INFO - Starting web server on port 5000
+2025-07-20 08:31:25,155 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-20 08:31:26,784 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-20 08:31:26,785 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-20 08:31:26,804 - __main__ - INFO - Loaded cog: cogs.economy
+2025-07-20 08:31:26,806 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-20 08:31:26,814 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-20 08:31:26,892 - __main__ - ERROR - Failed to load cog cogs.rpg_games: Extension 'cogs.rpg_games' raised an error: CommandRegistrationError: The command shop is already an existing command or alias.
+2025-07-20 08:31:26,899 - __main__ - INFO - Loaded cog: cogs.rpg_core
+2025-07-20 08:31:26,904 - __main__ - INFO - Loaded cog: cogs.rpg_combat
+2025-07-20 08:31:26,908 - __main__ - INFO - Loaded cog: cogs.rpg_dungeons
+2025-07-20 08:31:26,913 - __main__ - ERROR - Failed to load cog cogs.rpg_shop: Extension 'cogs.rpg_shop' raised an error: CommandRegistrationError: The command shop is already an existing command or alias.
+2025-07-20 08:31:26,913 - discord.client - INFO - logging in using static token
+2025-07-20 08:31:28,461 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: ea3408bdd501270da4786e49c4285465).
+2025-07-20 08:31:30,497 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-20 08:31:30,498 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-20 08:31:31,081 - utils.database - INFO - Database initialization complete
+2025-07-20 08:31:31,081 - __main__ - INFO - Database initialized successfully
+2025-07-20 08:33:21,551 - __main__ - ERROR - Unhandled error in command profile: Command raised an exception: AttributeError: 'ObservedDict' object has no attribute 'copy'
+2025-07-20 08:39:23,640 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-20 08:39:23,641 - web_server - INFO - Starting web server on port 5000
+2025-07-20 08:39:23,644 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-20 08:39:24,494 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-20 08:39:24,495 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-20 08:39:24,499 - __main__ - INFO - Loaded cog: cogs.economy
+2025-07-20 08:39:24,502 - __main__ - ERROR - Failed to load cog cogs.help: Extension 'cogs.help' raised an error: ValueError: View is not persistent. Items need to have a custom_id set and View must have no timeout
+2025-07-20 08:39:24,505 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-20 08:39:24,551 - __main__ - ERROR - Failed to load cog cogs.rpg_games: Extension 'cogs.rpg_games' raised an error: CommandRegistrationError: The command shop is already an existing command or alias.
+2025-07-20 08:39:24,552 - __main__ - INFO - Loaded cog: cogs.rpg_core
+2025-07-20 08:39:24,568 - __main__ - INFO - Loaded cog: cogs.rpg_combat
+2025-07-20 08:39:24,569 - __main__ - INFO - Loaded cog: cogs.rpg_dungeons
+2025-07-20 08:39:24,571 - __main__ - ERROR - Failed to load cog cogs.rpg_shop: Extension 'cogs.rpg_shop' raised an error: CommandRegistrationError: The command shop is already an existing command or alias.
+2025-07-20 08:39:24,571 - discord.client - INFO - logging in using static token
+2025-07-20 08:39:26,204 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: b59f3ef7ff1ea641599d09d55772532c).
+2025-07-20 08:39:28,379 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-20 08:39:28,379 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-20 08:39:28,680 - utils.database - INFO - Database initialization complete
+2025-07-20 08:39:28,680 - __main__ - INFO - Database initialized successfully
+2025-07-20 11:23:50,629 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-20 11:23:50,634 - web_server - INFO - Starting web server on port 5000
+2025-07-20 11:23:50,642 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-20 11:23:51,616 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-20 11:23:51,617 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-20 11:23:51,623 - __main__ - INFO - Loaded cog: cogs.economy
+2025-07-20 11:23:51,624 - __main__ - ERROR - Failed to load cog cogs.help: Extension 'cogs.help' raised an error: ValueError: View is not persistent. Items need to have a custom_id set and View must have no timeout
+2025-07-20 11:23:51,637 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-20 11:23:51,645 - __main__ - ERROR - Failed to load cog cogs.rpg_games: Extension 'cogs.rpg_games' raised an error: CommandRegistrationError: The command shop is already an existing command or alias.
+2025-07-20 11:23:51,649 - __main__ - INFO - Loaded cog: cogs.rpg_core
+2025-07-20 11:23:51,652 - __main__ - INFO - Loaded cog: cogs.rpg_combat
+2025-07-20 11:23:51,654 - __main__ - INFO - Loaded cog: cogs.rpg_dungeons
+2025-07-20 11:23:51,656 - __main__ - ERROR - Failed to load cog cogs.rpg_shop: Extension 'cogs.rpg_shop' raised an error: CommandRegistrationError: The command shop is already an existing command or alias.
+2025-07-20 11:23:51,656 - discord.client - INFO - logging in using static token
+2025-07-20 11:23:53,298 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 77ba491b4fb7327531b7ed7d307e3aaa).
+2025-07-20 11:23:55,353 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-20 11:23:55,354 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-20 11:23:55,725 - utils.database - INFO - Database initialization complete
+2025-07-20 11:23:55,727 - __main__ - INFO - Database initialized successfully
+2025-07-20 11:30:19,548 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-20 11:30:19,549 - web_server - INFO - Starting web server on port 5000
+2025-07-20 11:30:19,552 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-20 11:30:20,191 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-20 11:30:20,191 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-20 11:30:20,198 - __main__ - ERROR - Failed to load cog cogs.economy: Extension 'cogs.economy' raised an error: ImportError: cannot import name 'LUCK_LEVELS' from 'utils.constants' (/home/runner/workspace/utils/constants.py)
+2025-07-20 11:30:20,199 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-20 11:30:20,202 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-20 11:30:20,204 - __main__ - ERROR - Failed to load cog cogs.rpg_games: Extension 'cogs.rpg_games' raised an error: ImportError: cannot import name 'LUCK_LEVELS' from 'utils.constants' (/home/runner/workspace/utils/constants.py)
+2025-07-20 11:30:20,206 - __main__ - INFO - Loaded cog: cogs.rpg_core
+2025-07-20 11:30:20,207 - __main__ - INFO - Loaded cog: cogs.rpg_combat
+2025-07-20 11:30:20,207 - __main__ - INFO - Loaded cog: cogs.rpg_dungeons
+2025-07-20 11:30:20,212 - __main__ - INFO - Loaded cog: cogs.rpg_shop
+2025-07-20 11:30:20,212 - discord.client - INFO - logging in using static token
+2025-07-20 11:30:21,774 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 6f5cf2ce7a2a3303257f3256b1195402).
+2025-07-20 11:30:23,869 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-20 11:30:23,869 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-20 11:30:24,193 - utils.database - INFO - Database initialization complete
+2025-07-20 11:30:24,193 - __main__ - INFO - Database initialized successfully
+2025-07-20 11:33:37,474 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-20 11:33:37,477 - web_server - INFO - Starting web server on port 5000
+2025-07-20 11:33:37,482 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-20 11:33:38,195 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-20 11:33:38,195 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-20 11:33:38,203 - __main__ - INFO - Loaded cog: cogs.economy
+2025-07-20 11:33:38,204 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-20 11:33:38,207 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-20 11:33:38,213 - __main__ - INFO - Loaded cog: cogs.rpg_games
+2025-07-20 11:33:38,215 - __main__ - ERROR - Failed to load cog cogs.rpg_core: Extension 'cogs.rpg_core' raised an error: CommandRegistrationError: The command profile is already an existing command or alias.
+2025-07-20 11:33:38,216 - __main__ - INFO - Loaded cog: cogs.rpg_combat
+2025-07-20 11:33:38,217 - __main__ - INFO - Loaded cog: cogs.rpg_dungeons
+2025-07-20 11:33:38,218 - __main__ - INFO - Loaded cog: cogs.rpg_shop
+2025-07-20 11:33:38,218 - discord.client - INFO - logging in using static token
+2025-07-20 11:33:39,863 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 81be5142d8c393368a855e9dfdf1c8f5).
+2025-07-20 11:33:41,954 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-20 11:33:41,954 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-20 11:33:42,258 - utils.database - INFO - Database initialization complete
+2025-07-20 11:33:42,259 - __main__ - INFO - Database initialized successfully
+2025-07-20 12:07:11,738 - discord.gateway - INFO - Shard ID None has successfully RESUMED session 81be5142d8c393368a855e9dfdf1c8f5.
+2025-07-20 12:21:57,241 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-20 12:21:57,242 - web_server - INFO - Starting web server on port 5000
+2025-07-20 12:21:57,256 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-20 12:21:58,541 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-20 12:21:58,541 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-20 12:21:58,554 - __main__ - INFO - Loaded cog: cogs.economy
+2025-07-20 12:21:58,555 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-20 12:21:58,559 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-20 12:21:58,564 - __main__ - INFO - Loaded cog: cogs.rpg_core
+2025-07-20 12:21:58,573 - __main__ - ERROR - Failed to load cog cogs.rpg_games: Extension 'cogs.rpg_games' raised an error: CommandRegistrationError: The command profile is already an existing command or alias.
+2025-07-20 12:21:58,579 - __main__ - INFO - Loaded cog: cogs.rpg_combat
+2025-07-20 12:21:58,581 - __main__ - INFO - Loaded cog: cogs.rpg_dungeons
+2025-07-20 12:21:58,584 - __main__ - INFO - Loaded cog: cogs.rpg_shop
+2025-07-20 12:21:58,584 - discord.client - INFO - logging in using static token
+2025-07-20 12:22:00,119 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 3477303aa68d4fc0532f1a1506169b5e).
+2025-07-20 12:22:02,341 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-20 12:22:02,341 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-20 12:22:02,706 - utils.database - INFO - Database initialization complete
+2025-07-20 12:22:02,706 - __main__ - INFO - Database initialized successfully
+2025-07-20 12:25:16,839 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-20 12:25:16,840 - web_server - INFO - Starting web server on port 5000
+2025-07-20 12:25:16,843 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-20 12:25:17,575 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-20 12:25:17,575 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-20 12:25:17,578 - __main__ - INFO - Loaded cog: cogs.economy
+2025-07-20 12:25:17,579 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-20 12:25:17,582 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-20 12:25:17,583 - __main__ - INFO - Loaded cog: cogs.rpg_core
+2025-07-20 12:25:17,593 - __main__ - ERROR - Failed to load cog cogs.rpg_games: Extension 'cogs.rpg_games' raised an error: CommandRegistrationError: The command profile is already an existing command or alias.
+2025-07-20 12:25:17,594 - __main__ - INFO - Loaded cog: cogs.rpg_combat
+2025-07-20 12:25:17,595 - __main__ - INFO - Loaded cog: cogs.rpg_dungeons
+2025-07-20 12:25:17,596 - __main__ - INFO - Loaded cog: cogs.rpg_shop
+2025-07-20 12:25:17,596 - discord.client - INFO - logging in using static token
+2025-07-20 12:25:19,138 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 84ef2ab23426c90b8acf835445c83dbe).
+2025-07-20 12:25:21,166 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-20 12:25:21,167 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-20 12:25:21,508 - utils.database - INFO - Database initialization complete
+2025-07-20 12:25:21,508 - __main__ - INFO - Database initialized successfully
+2025-07-20 12:30:14,492 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-20 12:30:14,494 - web_server - INFO - Starting web server on port 5000
+2025-07-20 12:30:14,496 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-20 12:30:15,142 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-20 12:30:15,143 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-20 12:30:15,147 - __main__ - INFO - Loaded cog: cogs.economy
+2025-07-20 12:30:15,148 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-20 12:30:15,171 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-20 12:30:15,176 - __main__ - INFO - Loaded cog: cogs.rpg_core
+2025-07-20 12:30:15,190 - __main__ - ERROR - Failed to load cog cogs.rpg_games: Extension 'cogs.rpg_games' raised an error: CommandRegistrationError: The command profile is already an existing command or alias.
+2025-07-20 12:30:15,205 - __main__ - INFO - Loaded cog: cogs.rpg_combat
+2025-07-20 12:30:15,206 - __main__ - INFO - Loaded cog: cogs.rpg_dungeons
+2025-07-20 12:30:15,207 - __main__ - INFO - Loaded cog: cogs.rpg_shop
+2025-07-20 12:30:15,207 - discord.client - INFO - logging in using static token
+2025-07-20 12:30:16,928 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 1afe79391baacd059805de822222953f).
+2025-07-20 12:30:18,952 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-20 12:30:18,953 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-20 12:30:19,260 - utils.database - INFO - Database initialization complete
+2025-07-20 12:30:19,260 - __main__ - INFO - Database initialized successfully
+2025-07-20 12:34:58,869 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-20 12:34:58,871 - web_server - INFO - Starting web server on port 5000
+2025-07-20 12:34:58,879 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-20 12:34:59,953 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-20 12:34:59,953 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-20 12:34:59,958 - __main__ - INFO - Loaded cog: cogs.economy
+2025-07-20 12:34:59,959 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-20 12:34:59,963 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-20 12:34:59,968 - __main__ - INFO - Loaded cog: cogs.rpg_core
+2025-07-20 12:34:59,980 - __main__ - ERROR - Failed to load cog cogs.rpg_games: Extension 'cogs.rpg_games' raised an error: CommandRegistrationError: The command inventory is already an existing command or alias.
+2025-07-20 12:34:59,984 - __main__ - INFO - Loaded cog: cogs.rpg_combat
+2025-07-20 12:34:59,987 - __main__ - INFO - Loaded cog: cogs.rpg_dungeons
+2025-07-20 12:34:59,997 - __main__ - ERROR - Failed to load cog cogs.rpg_shop: Extension 'cogs.rpg_shop' raised an error: CommandRegistrationError: The alias shop is already an existing command or alias.
+2025-07-20 12:34:59,997 - discord.client - INFO - logging in using static token
+2025-07-20 12:35:01,509 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 499cb30793555c975be2df018aaf66a3).
+2025-07-20 12:35:03,731 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-20 12:35:03,731 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-20 12:35:04,031 - utils.database - INFO - Database initialization complete
+2025-07-20 12:35:04,031 - __main__ - INFO - Database initialized successfully
+2025-07-20 12:52:17,048 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-20 12:52:17,049 - web_server - INFO - Starting web server on port 5000
+2025-07-20 12:52:17,054 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-20 12:52:17,722 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-20 12:52:17,722 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-20 12:52:17,724 - __main__ - INFO - Loaded cog: cogs.economy
+2025-07-20 12:52:17,725 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-20 12:52:17,727 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-20 12:52:17,735 - __main__ - INFO - Loaded cog: cogs.rpg_core
+2025-07-20 12:52:17,769 - __main__ - ERROR - Failed to load cog cogs.rpg_games: Extension 'cogs.rpg_games' raised an error: IndentationError: unexpected indent (rpg_games.py, line 542)
+2025-07-20 12:52:17,777 - __main__ - INFO - Loaded cog: cogs.rpg_combat
+2025-07-20 12:52:17,778 - __main__ - ERROR - Failed to load cog cogs.rpg_dungeons: Extension 'cogs.rpg_dungeons' raised an error: ImportError: cannot import name 'DUNGEONS' from 'rpg_data.game_data' (/home/runner/workspace/rpg_data/game_data.py)
+2025-07-20 12:52:17,783 - __main__ - INFO - Loaded cog: cogs.rpg_shop
+2025-07-20 12:52:17,784 - discord.client - INFO - logging in using static token
+2025-07-20 12:52:19,307 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 55ad793e472eb7319389292cb8091149).
+2025-07-20 12:52:21,388 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-20 12:52:21,389 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-20 12:52:21,705 - utils.database - INFO - Database initialization complete
+2025-07-20 12:52:21,705 - __main__ - INFO - Database initialized successfully
+2025-07-20 12:56:10,188 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-20 12:56:11,865 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-20 12:56:11,867 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-20 12:56:35,473 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-20 12:56:38,080 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-20 12:56:38,081 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-20 12:58:04,588 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-20 12:58:04,594 - web_server - INFO - Starting web server on port 5000
+2025-07-20 12:58:04,613 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-20 12:58:05,534 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-20 12:58:05,536 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-20 12:58:05,543 - __main__ - INFO - Loaded cog: cogs.economy
+2025-07-20 12:58:05,543 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-20 12:58:05,546 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-20 12:58:05,551 - __main__ - INFO - Loaded cog: cogs.rpg_core
+2025-07-20 12:58:05,584 - __main__ - ERROR - Failed to load cog cogs.rpg_games: Extension 'cogs.rpg_games' raised an error: CommandRegistrationError: The command profile is already an existing command or alias.
+2025-07-20 12:58:05,586 - __main__ - INFO - Loaded cog: cogs.rpg_combat
+2025-07-20 12:58:05,592 - __main__ - INFO - Loaded cog: cogs.rpg_dungeons
+2025-07-20 12:58:05,595 - __main__ - INFO - Loaded cog: cogs.rpg_shop
+2025-07-20 12:58:05,595 - discord.client - INFO - logging in using static token
+2025-07-20 12:58:07,163 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: a3d0c0cbb87e65957e82bd46bf1b2a2f).
+2025-07-20 12:58:09,395 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-20 12:58:09,398 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-20 12:58:09,717 - utils.database - INFO - Database initialization complete
+2025-07-20 12:58:09,717 - __main__ - INFO - Database initialized successfully
+2025-07-20 13:18:48,454 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-20 13:18:48,463 - web_server - INFO - Starting web server on port 5000
+2025-07-20 13:18:48,487 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-20 13:18:50,440 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-20 13:18:50,441 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-20 13:18:50,457 - __main__ - INFO - Loaded cog: cogs.economy
+2025-07-20 13:18:50,458 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-20 13:18:50,471 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-20 13:18:50,480 - __main__ - INFO - Loaded cog: cogs.rpg_core
+2025-07-20 13:18:50,494 - __main__ - ERROR - Failed to load cog cogs.rpg_games: Extension 'cogs.rpg_games' raised an error: CommandRegistrationError: The command profile is already an existing command or alias.
+2025-07-20 13:18:50,512 - __main__ - INFO - Loaded cog: cogs.rpg_combat
+2025-07-20 13:18:50,517 - __main__ - INFO - Loaded cog: cogs.rpg_dungeons
+2025-07-20 13:18:50,522 - __main__ - INFO - Loaded cog: cogs.rpg_shop
+2025-07-20 13:18:50,523 - discord.client - INFO - logging in using static token
+2025-07-20 13:18:52,083 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 2c7a2b51ad36ee7e7661088759264478).
+2025-07-20 13:18:54,183 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-20 13:18:54,183 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-20 13:18:54,804 - utils.database - INFO - Database initialization complete
+2025-07-20 13:18:54,804 - __main__ - INFO - Database initialized successfully
+2025-07-20 13:20:15,439 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-20 13:20:15,440 - web_server - INFO - Starting web server on port 5000
+2025-07-20 13:20:15,446 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-20 13:20:16,349 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-20 13:20:16,349 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-20 13:20:16,356 - __main__ - INFO - Loaded cog: cogs.economy
+2025-07-20 13:20:16,357 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-20 13:20:16,361 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-20 13:20:16,364 - __main__ - INFO - Loaded cog: cogs.rpg_core
+2025-07-20 13:20:16,378 - __main__ - ERROR - Failed to load cog cogs.rpg_games: Extension 'cogs.rpg_games' raised an error: CommandRegistrationError: The command inventory is already an existing command or alias.
+2025-07-20 13:20:16,381 - __main__ - INFO - Loaded cog: cogs.rpg_combat
+2025-07-20 13:20:16,385 - __main__ - INFO - Loaded cog: cogs.rpg_dungeons
+2025-07-20 13:20:16,386 - __main__ - INFO - Loaded cog: cogs.rpg_shop
+2025-07-20 13:20:16,386 - discord.client - INFO - logging in using static token
+2025-07-20 13:20:17,969 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: c2eecbe440d1504250ba7f66d08390d4).
+2025-07-20 13:20:20,068 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-20 13:20:20,068 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-20 13:20:20,388 - utils.database - INFO - Database initialization complete
+2025-07-20 13:20:20,388 - __main__ - INFO - Database initialized successfully
+2025-07-20 13:26:23,250 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-20 13:26:23,250 - web_server - INFO - Starting web server on port 5000
+2025-07-20 13:26:23,254 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-20 13:26:23,894 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-20 13:26:23,895 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-20 13:26:23,897 - __main__ - INFO - Loaded cog: cogs.economy
+2025-07-20 13:26:23,898 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-20 13:26:23,900 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-20 13:26:23,902 - __main__ - INFO - Loaded cog: cogs.rpg_core
+2025-07-20 13:26:23,912 - __main__ - ERROR - Failed to load cog cogs.rpg_games: Extension 'cogs.rpg_games' raised an error: CommandRegistrationError: The command stats is already an existing command or alias.
+2025-07-20 13:26:23,913 - __main__ - INFO - Loaded cog: cogs.rpg_combat
+2025-07-20 13:26:23,914 - __main__ - INFO - Loaded cog: cogs.rpg_dungeons
+2025-07-20 13:26:23,914 - __main__ - INFO - Loaded cog: cogs.rpg_shop
+2025-07-20 13:26:23,914 - discord.client - INFO - logging in using static token
+2025-07-20 13:26:25,731 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 93ea710cf0c188234abc7f0dd8391190).
+2025-07-20 13:26:27,779 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-20 13:26:27,779 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-20 13:26:28,084 - utils.database - INFO - Database initialization complete
+2025-07-20 13:26:28,084 - __main__ - INFO - Database initialized successfully
+2025-07-20 13:31:17,416 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-20 13:31:17,424 - web_server - INFO - Starting web server on port 5000
+2025-07-20 13:31:17,434 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-20 13:31:18,494 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-20 13:31:18,494 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-20 13:31:18,503 - __main__ - INFO - Loaded cog: cogs.economy
+2025-07-20 13:31:18,504 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-20 13:31:18,515 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-20 13:31:18,522 - __main__ - INFO - Loaded cog: cogs.rpg_core
+2025-07-20 13:31:18,530 - __main__ - INFO - Loaded cog: cogs.rpg_games
+2025-07-20 13:31:18,534 - __main__ - INFO - Loaded cog: cogs.rpg_combat
+2025-07-20 13:31:18,535 - __main__ - INFO - Loaded cog: cogs.rpg_dungeons
+2025-07-20 13:31:18,537 - __main__ - INFO - Loaded cog: cogs.rpg_shop
+2025-07-20 13:31:18,537 - discord.client - INFO - logging in using static token
+2025-07-20 13:31:20,163 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 10ce770e8be8b6b5f29ca105e2b1d0f0).
+2025-07-20 13:31:22,255 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-20 13:31:22,256 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-20 13:31:22,569 - utils.database - INFO - Database initialization complete
+2025-07-20 13:31:22,569 - __main__ - INFO - Database initialized successfully
+2025-07-20 13:54:01,271 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-20 13:54:01,271 - web_server - INFO - Starting web server on port 5000
+2025-07-20 13:54:01,277 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-20 13:54:02,153 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-20 13:54:02,154 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-20 13:54:02,161 - __main__ - INFO - Loaded cog: cogs.economy
+2025-07-20 13:54:02,162 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-20 13:54:02,165 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-20 13:54:02,168 - __main__ - INFO - Loaded cog: cogs.rpg_core
+2025-07-20 13:54:02,188 - __main__ - ERROR - Failed to load cog cogs.rpg_games: Extension 'cogs.rpg_games' raised an error: CommandRegistrationError: The command inventory is already an existing command or alias.
+2025-07-20 13:54:02,192 - __main__ - INFO - Loaded cog: cogs.rpg_combat
+2025-07-20 13:54:02,193 - __main__ - INFO - Loaded cog: cogs.rpg_dungeons
+2025-07-20 13:54:02,195 - __main__ - INFO - Loaded cog: cogs.rpg_shop
+2025-07-20 13:54:02,195 - discord.client - INFO - logging in using static token
+2025-07-20 13:54:03,676 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: c1112c9ec613f691866d7e19409a7713).
+2025-07-20 13:54:05,690 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-20 13:54:05,690 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-20 13:54:06,005 - utils.database - INFO - Database initialization complete
+2025-07-20 13:54:06,005 - __main__ - INFO - Database initialized successfully
+2025-07-20 14:03:59,383 - __main__ - ERROR - Unhandled error in command profile: Command raised an exception: AttributeError: 'ObservedDict' object has no attribute 'copy'
+2025-07-20 14:18:10,125 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-20 14:18:10,126 - web_server - INFO - Starting web server on port 5000
+2025-07-20 14:18:10,129 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-20 14:18:10,730 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-20 14:18:10,731 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-20 14:18:10,733 - __main__ - INFO - Loaded cog: cogs.economy
+2025-07-20 14:18:10,734 - __main__ - ERROR - Failed to load cog cogs.help: Extension 'cogs.help' raised an error: ValueError: View is not persistent. Items need to have a custom_id set and View must have no timeout
+2025-07-20 14:18:10,736 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-20 14:18:10,741 - __main__ - INFO - Loaded cog: cogs.rpg_core
+2025-07-20 14:18:10,751 - __main__ - ERROR - Failed to load cog cogs.rpg_games: Extension 'cogs.rpg_games' raised an error: ImportError: cannot import name 'DatabaseManager' from 'utils.database' (/home/runner/workspace/utils/database.py)
+2025-07-20 14:18:10,792 - __main__ - INFO - Loaded cog: cogs.rpg_combat
+2025-07-20 14:18:10,793 - __main__ - INFO - Loaded cog: cogs.rpg_dungeons
+2025-07-20 14:18:10,794 - __main__ - INFO - Loaded cog: cogs.rpg_shop
+2025-07-20 14:18:10,794 - discord.client - INFO - logging in using static token
+2025-07-20 14:18:12,355 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 59cf63bb776fff949284ebb0cd0985af).
+2025-07-20 14:18:14,445 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-20 14:18:14,445 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-20 14:18:14,744 - utils.database - INFO - Database initialization complete
+2025-07-20 14:18:14,744 - __main__ - INFO - Database initialized successfully
+2025-07-20 14:25:56,841 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-20 14:25:56,843 - web_server - INFO - Starting web server on port 5000
+2025-07-20 14:25:56,846 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-20 14:25:57,692 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-20 14:25:57,693 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-20 14:25:57,695 - __main__ - INFO - Loaded cog: cogs.economy
+2025-07-20 14:25:57,697 - __main__ - ERROR - Failed to load cog cogs.help: Extension 'cogs.help' raised an error: ValueError: View is not persistent. Items need to have a custom_id set and View must have no timeout
+2025-07-20 14:25:57,699 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-20 14:25:57,700 - __main__ - ERROR - Failed to load cog cogs.rpg_core: Extension 'cogs.rpg_core' raised an error: IndentationError: expected an indented block after 'if' statement on line 19 (rpg_core.py, line 21)
+2025-07-20 14:25:57,701 - __main__ - ERROR - Failed to load cog cogs.rpg_games: Extension 'cogs.rpg_games' raised an error: ImportError: cannot import name 'DatabaseManager' from 'utils.database' (/home/runner/workspace/utils/database.py)
+2025-07-20 14:25:57,718 - __main__ - INFO - Loaded cog: cogs.rpg_combat
+2025-07-20 14:25:57,718 - __main__ - INFO - Loaded cog: cogs.rpg_dungeons
+2025-07-20 14:25:57,719 - __main__ - INFO - Loaded cog: cogs.rpg_shop
+2025-07-20 14:25:57,719 - discord.client - INFO - logging in using static token
+2025-07-20 14:25:59,222 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 6db26fb681d20bacb8a880b4492bb757).
+2025-07-20 14:26:01,236 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-20 14:26:01,236 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-20 14:26:01,574 - utils.database - INFO - Database initialization complete
+2025-07-20 14:26:01,574 - __main__ - INFO - Database initialized successfully
+2025-07-20 14:52:44,288 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-20 14:52:44,289 - web_server - INFO - Starting web server on port 5000
+2025-07-20 14:52:44,295 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-20 14:52:45,228 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-20 14:52:45,228 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-20 14:52:45,231 - __main__ - ERROR - Failed to load cog cogs.economy: Extension 'cogs.economy' raised an error: SyntaxError: invalid syntax (economy.py, line 2)
+2025-07-20 14:52:45,234 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-20 14:52:45,237 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-20 14:52:45,262 - __main__ - INFO - Loaded cog: cogs.rpg_core
+2025-07-20 14:52:45,273 - __main__ - INFO - Loaded cog: cogs.rpg_games
+2025-07-20 14:52:45,294 - __main__ - ERROR - Failed to load cog cogs.rpg_combat: Extension 'cogs.rpg_combat' raised an error: IndentationError: unexpected indent (rpg_combat.py, line 1067)
+2025-07-20 14:52:45,300 - __main__ - ERROR - Failed to load cog cogs.rpg_dungeons: Extension 'cogs.rpg_dungeons' raised an error: SyntaxError: invalid syntax (rpg_dungeons.py, line 2)
+2025-07-20 14:52:45,303 - __main__ - INFO - Loaded cog: cogs.rpg_shop
+2025-07-20 14:52:45,303 - discord.client - INFO - logging in using static token
+2025-07-20 14:52:46,826 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 3ca30320084f2ea1f51f90a86990fdb1).
+2025-07-20 14:52:49,062 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-20 14:52:49,062 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-20 14:52:49,371 - utils.database - INFO - Database initialization complete
+2025-07-20 14:52:49,371 - __main__ - INFO - Database initialized successfully
+2025-07-20 22:58:37,072 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-20 22:58:37,073 - web_server - INFO - Starting web server on port 5000
+2025-07-20 22:58:37,088 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-20 22:58:38,566 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-20 22:58:38,566 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-20 22:58:38,567 - __main__ - ERROR - Failed to load cog cogs.economy: Extension 'cogs.economy' raised an error: SyntaxError: invalid syntax (economy.py, line 2)
+2025-07-20 22:58:38,569 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-20 22:58:38,578 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-20 22:58:38,589 - __main__ - INFO - Loaded cog: cogs.rpg_core
+2025-07-20 22:58:38,596 - __main__ - INFO - Loaded cog: cogs.rpg_games
+2025-07-20 22:58:38,609 - __main__ - ERROR - Failed to load cog cogs.rpg_combat: Extension 'cogs.rpg_combat' raised an error: IndentationError: unexpected indent (rpg_combat.py, line 1067)
+2025-07-20 22:58:38,610 - __main__ - ERROR - Failed to load cog cogs.rpg_dungeons: Extension 'cogs.rpg_dungeons' raised an error: SyntaxError: invalid syntax (rpg_dungeons.py, line 2)
+2025-07-20 22:58:38,613 - __main__ - INFO - Loaded cog: cogs.rpg_shop
+2025-07-20 22:58:38,613 - discord.client - INFO - logging in using static token
+2025-07-20 22:58:40,324 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: e8c6af59b790ecb0f605fad8be8a1ed1).
+2025-07-20 22:58:42,481 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-20 22:58:42,481 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-20 22:58:43,040 - utils.database - INFO - Database initialization complete
+2025-07-20 22:58:43,041 - __main__ - INFO - Database initialized successfully
+2025-07-20 23:08:37,076 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-20 23:08:37,077 - web_server - INFO - Starting web server on port 5000
+2025-07-20 23:08:37,085 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-20 23:08:37,677 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-20 23:08:37,677 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-20 23:08:37,678 - __main__ - ERROR - Failed to load cog cogs.economy: Extension 'cogs.economy' raised an error: SyntaxError: invalid syntax (economy.py, line 2)
+2025-07-20 23:08:37,678 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-20 23:08:37,681 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-20 23:08:37,683 - __main__ - INFO - Loaded cog: cogs.rpg_core
+2025-07-20 23:08:37,685 - __main__ - INFO - Loaded cog: cogs.rpg_games
+2025-07-20 23:08:37,696 - __main__ - INFO - Loaded cog: cogs.rpg_combat
+2025-07-20 23:08:37,697 - __main__ - ERROR - Failed to load cog cogs.rpg_dungeons: Extension 'cogs.rpg_dungeons' raised an error: SyntaxError: invalid syntax (rpg_dungeons.py, line 2)
+2025-07-20 23:08:37,698 - __main__ - INFO - Loaded cog: cogs.rpg_shop
+2025-07-20 23:08:37,698 - discord.client - INFO - logging in using static token
+2025-07-20 23:08:39,131 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 20154c3c79021f01925033ed0e4ed6f0).
+2025-07-20 23:08:41,221 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-20 23:08:41,221 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-20 23:08:41,591 - utils.database - INFO - Database initialization complete
+2025-07-20 23:08:41,592 - __main__ - INFO - Database initialized successfully
+2025-07-20 23:10:08,401 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-20 23:10:08,402 - web_server - INFO - Starting web server on port 5000
+2025-07-20 23:10:08,406 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-20 23:10:09,045 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-20 23:10:09,045 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-20 23:10:09,045 - __main__ - ERROR - Failed to load cog cogs.economy: Extension 'cogs.economy' raised an error: SyntaxError: invalid syntax (economy.py, line 2)
+2025-07-20 23:10:09,046 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-20 23:10:09,049 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-20 23:10:09,051 - __main__ - INFO - Loaded cog: cogs.rpg_core
+2025-07-20 23:10:09,052 - __main__ - INFO - Loaded cog: cogs.rpg_games
+2025-07-20 23:10:09,053 - __main__ - INFO - Loaded cog: cogs.rpg_combat
+2025-07-20 23:10:09,059 - __main__ - ERROR - Failed to load cog cogs.rpg_dungeons: Extension 'cogs.rpg_dungeons' raised an error: SyntaxError: invalid syntax (rpg_dungeons.py, line 12)
+2025-07-20 23:10:09,060 - __main__ - INFO - Loaded cog: cogs.rpg_shop
+2025-07-20 23:10:09,060 - discord.client - INFO - logging in using static token
+2025-07-20 23:10:10,526 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 7331a0b9b4d779dccba707a12620cdd9).
+2025-07-20 23:10:12,543 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-20 23:10:12,543 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-20 23:10:12,812 - utils.database - INFO - Database initialization complete
+2025-07-20 23:10:12,812 - __main__ - INFO - Database initialized successfully
+2025-07-20 23:22:26,813 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-20 23:22:26,814 - web_server - INFO - Starting web server on port 5000
+2025-07-20 23:22:26,818 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-20 23:22:27,424 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-20 23:22:27,424 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-20 23:22:27,425 - __main__ - ERROR - Failed to load cog cogs.economy: Extension 'cogs.economy' raised an error: SyntaxError: invalid syntax (economy.py, line 2)
+2025-07-20 23:22:27,426 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-20 23:22:27,428 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-20 23:22:27,442 - __main__ - INFO - Loaded cog: cogs.rpg_core
+2025-07-20 23:22:27,458 - __main__ - ERROR - Failed to load cog cogs.rpg_games: Extension 'cogs.rpg_games' raised an error: ImportError: cannot import name 'TACTICAL_MONSTERS' from 'rpg_data.game_data' (/home/runner/workspace/rpg_data/game_data.py)
+2025-07-20 23:22:27,459 - __main__ - ERROR - Failed to load cog cogs.rpg_combat: Extension 'cogs.rpg_combat' raised an error: ImportError: cannot import name 'TACTICAL_MONSTERS' from 'rpg_data.game_data' (/home/runner/workspace/rpg_data/game_data.py)
+2025-07-20 23:22:27,463 - __main__ - ERROR - Failed to load cog cogs.rpg_dungeons: Extension 'cogs.rpg_dungeons' raised an error: ImportError: cannot import name 'TACTICAL_MONSTERS' from 'rpg_data.game_data' (/home/runner/workspace/rpg_data/game_data.py)
+2025-07-20 23:22:27,472 - __main__ - INFO - Loaded cog: cogs.rpg_shop
+2025-07-20 23:22:27,472 - discord.client - INFO - logging in using static token
+2025-07-20 23:22:29,048 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: f8fc41e80feb90dbebba4c9c714c5b8c).
+2025-07-20 23:22:31,083 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-20 23:22:31,083 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-20 23:22:31,389 - utils.database - INFO - Database initialization complete
+2025-07-20 23:22:31,390 - __main__ - INFO - Database initialized successfully
+2025-07-20 23:22:58,763 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-20 23:22:58,764 - web_server - INFO - Starting web server on port 5000
+2025-07-20 23:22:58,768 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-20 23:22:59,361 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-20 23:22:59,361 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-20 23:22:59,362 - __main__ - ERROR - Failed to load cog cogs.economy: Extension 'cogs.economy' raised an error: SyntaxError: invalid syntax (economy.py, line 2)
+2025-07-20 23:22:59,362 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-20 23:22:59,365 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-20 23:22:59,367 - __main__ - INFO - Loaded cog: cogs.rpg_core
+2025-07-20 23:22:59,368 - __main__ - ERROR - Failed to load cog cogs.rpg_games: Extension 'cogs.rpg_games' raised an error: ImportError: cannot import name 'TACTICAL_MONSTERS' from 'rpg_data.game_data' (/home/runner/workspace/rpg_data/game_data.py)
+2025-07-20 23:22:59,368 - __main__ - ERROR - Failed to load cog cogs.rpg_combat: Extension 'cogs.rpg_combat' raised an error: ImportError: cannot import name 'TACTICAL_MONSTERS' from 'rpg_data.game_data' (/home/runner/workspace/rpg_data/game_data.py)
+2025-07-20 23:22:59,369 - __main__ - ERROR - Failed to load cog cogs.rpg_dungeons: Extension 'cogs.rpg_dungeons' raised an error: ImportError: cannot import name 'TACTICAL_MONSTERS' from 'rpg_data.game_data' (/home/runner/workspace/rpg_data/game_data.py)
+2025-07-20 23:22:59,370 - __main__ - INFO - Loaded cog: cogs.rpg_shop
+2025-07-20 23:22:59,370 - discord.client - INFO - logging in using static token
+2025-07-20 23:23:02,119 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 8bb7fc2d936c507b631006cad8bfb384).
+2025-07-20 23:23:04,202 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-20 23:23:04,202 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-20 23:23:04,521 - utils.database - INFO - Database initialization complete
+2025-07-20 23:23:04,522 - __main__ - INFO - Database initialized successfully
+2025-07-20 23:29:42,891 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-20 23:29:42,891 - web_server - INFO - Starting web server on port 5000
+2025-07-20 23:29:42,895 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-20 23:29:43,469 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-20 23:29:43,469 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-20 23:29:43,473 - __main__ - INFO - Loaded cog: cogs.economy
+2025-07-20 23:29:43,474 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-20 23:29:43,476 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-20 23:29:43,481 - __main__ - INFO - Loaded cog: cogs.rpg_core
+2025-07-20 23:29:43,486 - __main__ - ERROR - Failed to load cog cogs.rpg_games: Extension 'cogs.rpg_games' raised an error: ImportError: cannot import name 'CRAFTING_RECIPES' from 'rpg_data.game_data' (/home/runner/workspace/rpg_data/game_data.py)
+2025-07-20 23:29:43,487 - __main__ - ERROR - Failed to load cog cogs.rpg_combat: Extension 'cogs.rpg_combat' raised an error: ImportError: cannot import name 'TACTICAL_SKILLS' from 'rpg_data.game_data' (/home/runner/workspace/rpg_data/game_data.py)
+2025-07-20 23:29:43,488 - __main__ - INFO - Loaded cog: cogs.rpg_dungeons
+2025-07-20 23:29:43,489 - __main__ - ERROR - Failed to load cog cogs.rpg_shop: Extension 'cogs.rpg_shop' raised an error: CommandRegistrationError: The command auction is already an existing command or alias.
+2025-07-20 23:29:43,489 - discord.client - INFO - logging in using static token
+2025-07-20 23:29:44,976 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 38759f92ab25eb0760b2261001e3d482).
+2025-07-20 23:29:47,065 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-20 23:29:47,066 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-20 23:29:47,348 - utils.database - INFO - Database initialization complete
+2025-07-20 23:29:47,348 - __main__ - INFO - Database initialized successfully
+2025-07-20 23:32:17,254 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-20 23:32:17,255 - web_server - INFO - Starting web server on port 5000
+2025-07-20 23:32:17,258 - __main__ - INFO - ✅ ADMIN module loaded successfully
+2025-07-20 23:32:17,862 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-20 23:32:17,864 - __main__ - INFO - ✅ AI_CHATBOT module loaded successfully
+2025-07-20 23:32:17,865 - __main__ - INFO - ✅ ECONOMY module loaded successfully
+2025-07-20 23:32:17,866 - __main__ - INFO - ✅ HELP module loaded successfully
+2025-07-20 23:32:17,869 - __main__ - INFO - ✅ MODERATION module loaded successfully
+2025-07-20 23:32:17,874 - __main__ - ERROR - ❌ RPG_CORE module failed: Extension 'cogs.rpg_core' raised an error: SyntaxError: unterminated string literal (detected at line 804) (game_data.py, line 804)
+2025-07-20 23:32:17,879 - __main__ - ERROR - ❌ RPG_GAMES module failed: Extension 'cogs.rpg_games' raised an error: SyntaxError: unterminated string literal (detected at line 804) (game_data.py, line 804)
+2025-07-20 23:32:17,882 - __main__ - ERROR - ❌ RPG_COMBAT module failed: Extension 'cogs.rpg_combat' raised an error: SyntaxError: unterminated string literal (detected at line 804) (game_data.py, line 804)
+2025-07-20 23:32:17,885 - __main__ - ERROR - ❌ RPG_DUNGEONS module failed: Extension 'cogs.rpg_dungeons' raised an error: SyntaxError: unterminated string literal (detected at line 804) (game_data.py, line 804)
+2025-07-20 23:32:17,899 - __main__ - ERROR - ❌ RPG_SHOP module failed: Extension 'cogs.rpg_shop' raised an error: SyntaxError: invalid syntax (rpg_shop.py, line 660)
+2025-07-20 23:32:17,899 - __main__ - INFO - 📊 Module Summary: 5 loaded, 5 failed
+2025-07-20 23:32:17,899 - discord.client - INFO - logging in using static token
+2025-07-20 23:32:19,438 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: a25c3c9809bc64361f1b8dde1ca082c9).
+2025-07-20 23:32:21,529 - __main__ - INFO - 🧀 Plagg (Kwami of Destruction) has awakened!
+2025-07-20 23:32:21,529 - __main__ - INFO - 🏰 Causing chaos in 2 guilds
+2025-07-20 23:32:21,826 - utils.database - INFO - Database initialization complete
+2025-07-20 23:32:21,827 - __main__ - INFO - Database initialized successfully
+2025-07-20 23:34:40,524 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-20 23:34:40,525 - web_server - INFO - Starting web server on port 5000
+2025-07-20 23:34:40,530 - __main__ - INFO - ✅ ADMIN module loaded successfully
+2025-07-20 23:34:41,173 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-20 23:34:41,174 - __main__ - INFO - ✅ AI_CHATBOT module loaded successfully
+2025-07-20 23:34:41,175 - __main__ - INFO - ✅ ECONOMY module loaded successfully
+2025-07-20 23:34:41,175 - __main__ - INFO - ✅ HELP module loaded successfully
+2025-07-20 23:34:41,177 - __main__ - INFO - ✅ MODERATION module loaded successfully
+2025-07-20 23:34:41,193 - __main__ - INFO - ✅ RPG_CORE module loaded successfully
+2025-07-20 23:34:41,200 - __main__ - INFO - ✅ RPG_GAMES module loaded successfully
+2025-07-20 23:34:41,201 - __main__ - ERROR - ❌ RPG_COMBAT module failed: Extension 'cogs.rpg_combat' raised an error: ImportError: cannot import name 'ULTIMATE_ABILITIES' from 'rpg_data.game_data' (/home/runner/workspace/rpg_data/game_data.py)
+2025-07-20 23:34:41,202 - __main__ - INFO - ✅ RPG_DUNGEONS module loaded successfully
+2025-07-20 23:34:41,209 - __main__ - ERROR - ❌ RPG_SHOP module failed: Extension 'cogs.rpg_shop' raised an error: CommandRegistrationError: The command auction is already an existing command or alias.
+2025-07-20 23:34:41,209 - __main__ - INFO - 📊 Module Summary: 8 loaded, 2 failed
+2025-07-20 23:34:41,209 - discord.client - INFO - logging in using static token
+2025-07-20 23:34:42,784 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 2a962c3179f6874df09d34c673a44009).
+2025-07-20 23:34:44,874 - __main__ - INFO - 🧀 Plagg (Kwami of Destruction) has awakened!
+2025-07-20 23:34:44,874 - __main__ - INFO - 🏰 Causing chaos in 2 guilds
+2025-07-20 23:34:45,626 - utils.database - INFO - Database initialization complete
+2025-07-20 23:34:45,626 - __main__ - INFO - Database initialized successfully
+2025-07-20 23:39:05,629 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-20 23:39:05,630 - web_server - INFO - Starting web server on port 5000
+2025-07-20 23:39:05,634 - __main__ - INFO - ✅ ADMIN module loaded successfully
+2025-07-20 23:39:06,227 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-20 23:39:06,228 - __main__ - INFO - ✅ AI_CHATBOT module loaded successfully
+2025-07-20 23:39:06,229 - __main__ - INFO - ✅ ECONOMY module loaded successfully
+2025-07-20 23:39:06,229 - __main__ - INFO - ✅ HELP module loaded successfully
+2025-07-20 23:39:06,231 - __main__ - INFO - ✅ MODERATION module loaded successfully
+2025-07-20 23:39:06,239 - __main__ - ERROR - ❌ RPG_CORE module failed: Extension 'cogs.rpg_core' raised an error: SyntaxError: invalid syntax (game_data.py, line 791)
+2025-07-20 23:39:06,262 - __main__ - ERROR - ❌ RPG_GAMES module failed: Extension 'cogs.rpg_games' raised an error: SyntaxError: invalid syntax (game_data.py, line 791)
+2025-07-20 23:39:06,279 - __main__ - ERROR - ❌ RPG_COMBAT module failed: Extension 'cogs.rpg_combat' raised an error: SyntaxError: invalid syntax (game_data.py, line 791)
+2025-07-20 23:39:06,285 - __main__ - ERROR - ❌ RPG_DUNGEONS module failed: Extension 'cogs.rpg_dungeons' raised an error: SyntaxError: invalid syntax (game_data.py, line 791)
+2025-07-20 23:39:06,295 - __main__ - ERROR - ❌ RPG_SHOP module failed: Extension 'cogs.rpg_shop' raised an error: SyntaxError: invalid syntax (game_data.py, line 791)
+2025-07-20 23:39:06,296 - __main__ - INFO - 📊 Module Summary: 5 loaded, 5 failed
+2025-07-20 23:39:06,296 - discord.client - INFO - logging in using static token
+2025-07-20 23:39:07,790 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 9dbda213b87d0baa1b251386c990e9d8).
+2025-07-20 23:39:09,926 - __main__ - INFO - 🧀 Plagg (Kwami of Destruction) has awakened!
+2025-07-20 23:39:09,926 - __main__ - INFO - 🏰 Causing chaos in 2 guilds
+2025-07-20 23:39:10,225 - utils.database - INFO - Database initialization complete
+2025-07-20 23:39:10,225 - __main__ - INFO - Database initialized successfully
+2025-07-20 23:39:40,822 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-20 23:39:40,822 - web_server - INFO - Starting web server on port 5000
+2025-07-20 23:39:40,826 - __main__ - INFO - ✅ ADMIN module loaded successfully
+2025-07-20 23:39:41,432 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-20 23:39:41,433 - __main__ - INFO - ✅ AI_CHATBOT module loaded successfully
+2025-07-20 23:39:41,434 - __main__ - INFO - ✅ ECONOMY module loaded successfully
+2025-07-20 23:39:41,435 - __main__ - INFO - ✅ HELP module loaded successfully
+2025-07-20 23:39:41,437 - __main__ - INFO - ✅ MODERATION module loaded successfully
+2025-07-20 23:39:41,444 - __main__ - ERROR - ❌ RPG_CORE module failed: Extension 'cogs.rpg_core' raised an error: SyntaxError: invalid syntax (game_data.py, line 791)
+2025-07-20 23:39:41,462 - __main__ - ERROR - ❌ RPG_GAMES module failed: Extension 'cogs.rpg_games' raised an error: SyntaxError: invalid syntax (game_data.py, line 791)
+2025-07-20 23:39:41,471 - __main__ - ERROR - ❌ RPG_COMBAT module failed: Extension 'cogs.rpg_combat' raised an error: SyntaxError: invalid syntax (game_data.py, line 791)
+2025-07-20 23:39:41,479 - __main__ - ERROR - ❌ RPG_DUNGEONS module failed: Extension 'cogs.rpg_dungeons' raised an error: SyntaxError: invalid syntax (game_data.py, line 791)
+2025-07-20 23:39:41,487 - __main__ - ERROR - ❌ RPG_SHOP module failed: Extension 'cogs.rpg_shop' raised an error: SyntaxError: invalid syntax (game_data.py, line 791)
+2025-07-20 23:39:41,487 - __main__ - INFO - 📊 Module Summary: 5 loaded, 5 failed
+2025-07-20 23:39:41,488 - discord.client - INFO - logging in using static token
+2025-07-20 23:39:42,974 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: fc85c2f314a82e67fdbf23e16a99e411).
+2025-07-20 23:39:45,001 - __main__ - INFO - 🧀 Plagg (Kwami of Destruction) has awakened!
+2025-07-20 23:39:45,001 - __main__ - INFO - 🏰 Causing chaos in 2 guilds
+2025-07-20 23:39:45,298 - utils.database - INFO - Database initialization complete
+2025-07-20 23:39:45,298 - __main__ - INFO - Database initialized successfully
+2025-07-20 23:44:45,533 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-20 23:44:45,534 - web_server - INFO - Starting web server on port 5000
+2025-07-20 23:44:45,537 - __main__ - INFO - ✅ ADMIN module loaded successfully
+2025-07-20 23:44:46,276 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-20 23:44:46,276 - __main__ - INFO - ✅ AI_CHATBOT module loaded successfully
+2025-07-20 23:44:46,277 - __main__ - INFO - ✅ ECONOMY module loaded successfully
+2025-07-20 23:44:46,278 - __main__ - INFO - ✅ HELP module loaded successfully
+2025-07-20 23:44:46,280 - __main__ - INFO - ✅ MODERATION module loaded successfully
+2025-07-20 23:44:46,288 - __main__ - ERROR - ❌ RPG_CORE module failed: Extension 'cogs.rpg_core' raised an error: SyntaxError: unterminated string literal (detected at line 793) (game_data.py, line 793)
+2025-07-20 23:44:46,295 - __main__ - ERROR - ❌ RPG_GAMES module failed: Extension 'cogs.rpg_games' raised an error: SyntaxError: unterminated string literal (detected at line 793) (game_data.py, line 793)
+2025-07-20 23:44:46,302 - __main__ - ERROR - ❌ RPG_COMBAT module failed: Extension 'cogs.rpg_combat' raised an error: SyntaxError: unterminated string literal (detected at line 793) (game_data.py, line 793)
+2025-07-20 23:44:46,310 - __main__ - ERROR - ❌ RPG_DUNGEONS module failed: Extension 'cogs.rpg_dungeons' raised an error: SyntaxError: unterminated string literal (detected at line 793) (game_data.py, line 793)
+2025-07-20 23:44:46,360 - __main__ - ERROR - ❌ RPG_SHOP module failed: Extension 'cogs.rpg_shop' raised an error: SyntaxError: unterminated string literal (detected at line 793) (game_data.py, line 793)
+2025-07-20 23:44:46,360 - __main__ - INFO - 📊 Module Summary: 5 loaded, 5 failed
+2025-07-20 23:44:46,360 - discord.client - INFO - logging in using static token
+2025-07-20 23:44:47,843 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 20d4dd219672c2b9e68516b7ced260ea).
+2025-07-20 23:44:50,112 - __main__ - INFO - 🧀 Plagg (Kwami of Destruction) has awakened!
+2025-07-20 23:44:50,112 - __main__ - INFO - 🏰 Causing chaos in 2 guilds
+2025-07-20 23:44:50,434 - utils.database - INFO - Database initialization complete
+2025-07-20 23:44:50,434 - __main__ - INFO - Database initialized successfully
+2025-07-20 23:44:50,882 - __main__ - INFO - Sent startup message to Aesthetic Template 2 in #╔═════════════╗
+2025-07-20 23:44:51,476 - __main__ - INFO - Sent startup message to 𝖬𝖾𝗈𝗐𝗍𝗈𝗉𝗂𝖺 in #╭・🥀・announcements
+2025-07-20 23:49:00,570 - __main__ - INFO - Received signal 15, initiating shutdown...
+2025-07-20 23:49:05,785 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-20 23:49:05,786 - web_server - INFO - Starting web server on port 5000
+2025-07-20 23:49:05,790 - __main__ - INFO - ✅ ADMIN module loaded successfully
+2025-07-20 23:49:06,396 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-20 23:49:06,396 - __main__ - INFO - ✅ AI_CHATBOT module loaded successfully
+2025-07-20 23:49:06,397 - __main__ - INFO - ✅ ECONOMY module loaded successfully
+2025-07-20 23:49:06,398 - __main__ - INFO - ✅ HELP module loaded successfully
+2025-07-20 23:49:06,400 - __main__ - INFO - ✅ MODERATION module loaded successfully
+2025-07-20 23:49:06,416 - __main__ - ERROR - ❌ RPG_CORE module failed: Extension 'cogs.rpg_core' raised an error: SyntaxError: '{' was never closed (game_data.py, line 788)
+2025-07-20 23:49:06,427 - __main__ - ERROR - ❌ RPG_GAMES module failed: Extension 'cogs.rpg_games' raised an error: SyntaxError: '{' was never closed (game_data.py, line 788)
+2025-07-20 23:49:06,470 - __main__ - ERROR - ❌ RPG_COMBAT module failed: Extension 'cogs.rpg_combat' raised an error: SyntaxError: '{' was never closed (game_data.py, line 788)
+2025-07-20 23:49:06,477 - __main__ - ERROR - ❌ RPG_DUNGEONS module failed: Extension 'cogs.rpg_dungeons' raised an error: SyntaxError: '{' was never closed (game_data.py, line 788)
+2025-07-20 23:49:06,484 - __main__ - ERROR - ❌ RPG_SHOP module failed: Extension 'cogs.rpg_shop' raised an error: SyntaxError: '{' was never closed (game_data.py, line 788)
+2025-07-20 23:49:06,485 - __main__ - INFO - 📊 Module Summary: 5 loaded, 5 failed
+2025-07-20 23:49:06,485 - discord.client - INFO - logging in using static token
+2025-07-20 23:49:08,115 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: fa80bbdfea4bd5e1e25b42c3f39bcd1f).
+2025-07-20 23:49:10,131 - __main__ - INFO - 🧀 Plagg (Kwami of Destruction) has awakened!
+2025-07-20 23:49:10,131 - __main__ - INFO - 🏰 Causing chaos in 2 guilds
+2025-07-20 23:49:10,423 - utils.database - INFO - Database initialization complete
+2025-07-20 23:49:10,423 - __main__ - INFO - Database initialized successfully
+2025-07-20 23:49:10,950 - __main__ - INFO - Sent startup message to Aesthetic Template 2 in #╔═════════════╗
+2025-07-20 23:49:11,489 - __main__ - INFO - Sent startup message to 𝖬𝖾𝗈𝗐𝗍𝗈𝗉𝗂𝖺 in #╭・🥀・announcements
+2025-07-21 00:03:58,998 - __main__ - INFO - Received signal 15, initiating shutdown...
+2025-07-21 00:04:17,518 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-21 00:04:17,518 - web_server - INFO - Starting web server on port 5000
+2025-07-21 00:04:17,525 - __main__ - INFO - ✅ ADMIN module loaded successfully
+2025-07-21 00:04:18,277 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-21 00:04:18,277 - __main__ - INFO - ✅ AI_CHATBOT module loaded successfully
+2025-07-21 00:04:18,278 - __main__ - INFO - ✅ ECONOMY module loaded successfully
+2025-07-21 00:04:18,279 - __main__ - INFO - ✅ HELP module loaded successfully
+2025-07-21 00:04:18,281 - __main__ - INFO - ✅ MODERATION module loaded successfully
+2025-07-21 00:04:18,291 - __main__ - INFO - ✅ RPG_CORE module loaded successfully
+2025-07-21 00:04:18,294 - __main__ - INFO - ✅ RPG_GAMES module loaded successfully
+2025-07-21 00:04:18,295 - __main__ - INFO - ✅ RPG_COMBAT module loaded successfully
+2025-07-21 00:04:18,295 - __main__ - INFO - ✅ RPG_DUNGEONS module loaded successfully
+2025-07-21 00:04:18,296 - __main__ - INFO - ✅ RPG_SHOP module loaded successfully
+2025-07-21 00:04:18,297 - __main__ - INFO - 📊 Module Summary: 10 loaded, 0 failed
+2025-07-21 00:04:18,297 - discord.client - INFO - logging in using static token
+2025-07-21 00:04:19,910 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 3d2919361336899207b6b677608b04e6).
+2025-07-21 00:04:21,993 - __main__ - INFO - 🧀 Plagg (Kwami of Destruction) has awakened!
+2025-07-21 00:04:21,993 - __main__ - INFO - 🏰 Causing chaos in 2 guilds
+2025-07-21 00:04:22,313 - utils.database - INFO - Database initialization complete
+2025-07-21 00:04:22,313 - __main__ - INFO - Database initialized successfully
+2025-07-21 00:04:22,833 - __main__ - INFO - Sent startup message to Aesthetic Template 2 in #╔═════════════╗
+2025-07-21 00:04:23,277 - __main__ - INFO - Sent startup message to 𝖬𝖾𝗈𝗐𝗍𝗈𝗉𝗂𝖺 in #╭・🥀・announcements
+2025-07-21 00:04:38,499 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-07-21 00:04:43,092 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-07-21 00:04:43,094 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-07-21 00:05:13,400 - __main__ - ERROR - Unhandled error in command startrpg: Command raised an exception: KeyError: 'chrono_weave'

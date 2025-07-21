@@ -1,0 +1,21 @@
+2025-07-20 23:29:42,891 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-07-20 23:29:42,891 - web_server - INFO - Starting web server on port 5000
+ * Serving Flask app 'web_server'
+ * Debug mode: off
+2025-07-20 23:29:42,895 - __main__ - INFO - Loaded cog: cogs.admin
+2025-07-20 23:29:43,469 - cogs.ai_chatbot - INFO - ✅ AI client initialized successfully
+2025-07-20 23:29:43,469 - __main__ - INFO - Loaded cog: cogs.ai_chatbot
+2025-07-20 23:29:43,473 - __main__ - INFO - Loaded cog: cogs.economy
+2025-07-20 23:29:43,474 - __main__ - INFO - Loaded cog: cogs.help
+2025-07-20 23:29:43,476 - __main__ - INFO - Loaded cog: cogs.moderation
+2025-07-20 23:29:43,481 - __main__ - INFO - Loaded cog: cogs.rpg_core
+2025-07-20 23:29:43,486 - __main__ - ERROR - Failed to load cog cogs.rpg_games: Extension 'cogs.rpg_games' raised an error: ImportError: cannot import name 'CRAFTING_RECIPES' from 'rpg_data.game_data' (/home/runner/workspace/rpg_data/game_data.py)
+2025-07-20 23:29:43,487 - __main__ - ERROR - Failed to load cog cogs.rpg_combat: Extension 'cogs.rpg_combat' raised an error: ImportError: cannot import name 'TACTICAL_SKILLS' from 'rpg_data.game_data' (/home/runner/workspace/rpg_data/game_data.py)
+2025-07-20 23:29:43,488 - __main__ - INFO - Loaded cog: cogs.rpg_dungeons
+2025-07-20 23:29:43,489 - __main__ - ERROR - Failed to load cog cogs.rpg_shop: Extension 'cogs.rpg_shop' raised an error: CommandRegistrationError: The command auction is already an existing command or alias.
+2025-07-20 23:29:43,489 - discord.client - INFO - logging in using static token
+2025-07-20 23:29:44,976 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 38759f92ab25eb0760b2261001e3d482).
+2025-07-20 23:29:47,065 - __main__ - INFO - Plagg (Kwami of Destruction) has awakened! 🧀
+2025-07-20 23:29:47,066 - __main__ - INFO - Plagg is causing chaos in 2 guilds
+2025-07-20 23:29:47,348 - utils.database - INFO - Database initialization complete
+2025-07-20 23:29:47,348 - __main__ - INFO - Database initialized successfully
